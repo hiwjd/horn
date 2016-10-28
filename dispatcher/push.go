@@ -13,7 +13,7 @@ func push(url string, bs []byte) error {
 	bodyType := "application/json"
 	r := bytes.NewReader(bs)
 
-	rsp, err := http.Post(url, bodyType, r)
+	rsp, err := http.Post("http://"+url+"/push", bodyType, r)
 	if err != nil {
 		return err
 	}

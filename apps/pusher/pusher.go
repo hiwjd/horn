@@ -120,6 +120,7 @@ func main() {
 
 		uid := q.Get("uid")
 		trackID := q.Get("track_id")
+		log.Printf("/pull uid:%s track_id:%s \r\n", uid, trackID)
 		if uid == "" || trackID == "" {
 			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, "uid or trackID missing")
 			return
@@ -138,6 +139,7 @@ func main() {
 		if keepInt < 5 || keepInt > 30 {
 			keepInt = 15
 		}
+		log.Printf(" -> keep: %d \r\n", keepInt)
 		keepDuration := time.Duration(keepInt) * time.Second
 
 		bs, err := p.Fetch(uid, trackID, keepDuration)
@@ -150,7 +152,7 @@ func main() {
 			return
 		}
 
-		fmt.Fprintf(w, `{"code":0,"msgs":`)
+		fmt.Fprintf(w, `{"code":0,"msg":"","data":`)
 		w.Write(bs)
 		fmt.Fprintf(w, `}`)
 	})
@@ -227,7 +229,7 @@ func (c *PusherWSServer) Handle(conn *websocket.Conn) {
 				return
 			}
 		} else {
-			fmt.Fprintf(conn, `{"code":%d,"msg":"%s"}`, 0, bs)
+			fmt.Fprintf(conn, `{"code":%d,"msg":"","data":%s}`, 0, bs)
 		}
 	}
 }

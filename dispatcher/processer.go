@@ -3,6 +3,7 @@ package dispatcher
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hiwjd/horn/store"
 )
@@ -35,6 +36,7 @@ func textProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
 		return err
 	}
+	v.T["t1"] = int(time.Now().Unix())
 
 	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
 	for addr, uids := range addr2uids {

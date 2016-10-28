@@ -2,6 +2,7 @@ package pusher
 
 import (
 	"errors"
+	"log"
 	"sync"
 	"time"
 )
@@ -56,11 +57,18 @@ func New(queuesLen, queueSize, queueTrackSize int) *Pusher {
 
 // Add 增加一个消息下发队列
 func (c *Pusher) Add(uid string) error {
+	log.Printf("Pusher.Add uid:%s \r\n", uid)
 	c.Lock()
 	defer c.Unlock()
 
+	if _, ok := c.queues[uid]; ok {
+		log.Printf(" -> 已经存在 c.queues:%+v \r\n", c.queues)
+		return nil
+	}
+
 	q := NewLinkList(c.queueSize, c.queueTrackSize)
 	c.queues[uid] = q
+	log.Printf(" -> 新增 c.queues:%+v \r\n", c.queues)
 	return nil
 }
 

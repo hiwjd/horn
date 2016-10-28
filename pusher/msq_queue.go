@@ -3,6 +3,7 @@ package pusher
 import (
 	"bytes"
 	"errors"
+	"log"
 	"sync"
 )
 
@@ -125,6 +126,11 @@ func (c *LinkList) Fetch(trackID string) ([]*Node, error) {
 		t = &Track{-1, make(chan bool, 1)}
 		c.tracks[trackID] = t
 	}
+
+	log.Println("")
+	log.Printf(" -> trackID:%s \r\n", trackID)
+	log.Printf(" -> track:%+v \r\n", t)
+	log.Printf(" -> link:%+v \r\n\r\n", c)
 
 	if c.tail == nil {
 		return nil, ErrNoMsg
