@@ -11,7 +11,7 @@ type Processser func(handler *Handler, body []byte) error
 
 var sql = `
 		INSERT INTO messages
-			(mid,type,chat_id,from_uid,from_name,text,src,width,height,size,name,cmd)
+			(mid,type,chat_id,from_uid,from_name,text,src,width,height,size,name,event)
 		VALUES
 			(?,  ?,   ?,      ?,       ?,        ?,   ?,  ?,    ?,     ?,   ?,   ?)
 	`
@@ -90,7 +90,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 
 func requestChatProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> requestChatProcesser")
-	var v consumer.MessageCmdRequestChat
+	var v consumer.MessageEventRequestChat
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -103,12 +103,12 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	bs, err := json.Marshal(v.Cmd)
+	bs, err := json.Marshal(v.Event)
 	if err != nil {
-		log.Printf(" -> 把Cmd转成json失败: %s \r\n", err.Error())
+		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Cmd.Chat.Id, v.From.Id, v.From.Name, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, "", "", 0, 0, 0, "", string(bs))
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -119,7 +119,7 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 
 func joinChatProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> joinChatProcesser")
-	var v consumer.MessageCmdJoinChat
+	var v consumer.MessageEventJoinChat
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -132,12 +132,12 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	bs, err := json.Marshal(v.Cmd)
+	bs, err := json.Marshal(v.Event)
 	if err != nil {
-		log.Printf(" -> 把Cmd转成json失败: %s \r\n", err.Error())
+		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Cmd.Chat.Id, v.From.Id, v.From.Name, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, "", "", 0, 0, 0, "", string(bs))
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err

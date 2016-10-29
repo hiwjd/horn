@@ -116,7 +116,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 
 func requestChatProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> requestChatProcesser")
-	var v consumer.MessageCmdRequestChat
+	var v consumer.MessageEventRequestChat
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -125,7 +125,7 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 
 	// 获取被邀请对话的人的推送地址
 	addr2uids := make(map[string][]string)
-	for _, uid := range v.Cmd.Uids {
+	for _, uid := range v.Event.Uids {
 		addr := handler.store.GetPushAddrByUid(uid)
 		log.Printf("  --> 获取到用户[%s]的推送地址[%s] \r\n", uid, addr)
 		if _, ok := addr2uids[addr]; !ok {
@@ -155,7 +155,7 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 
 func joinChatProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> joinChatProcesser")
-	var v consumer.MessageCmdJoinChat
+	var v consumer.MessageEventJoinChat
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -163,7 +163,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	}
 
 	// 通知对话中的其他人 From加入对话了
-	addr2uids := getAddr2Uids(v.Cmd.Chat.Id, handler.store)
+	addr2uids := getAddr2Uids(v.Event.Chat.Id, handler.store)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"join_chat", uids, v}
 		bs, er := json.Marshal(m)

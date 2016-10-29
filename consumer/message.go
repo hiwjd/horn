@@ -56,26 +56,26 @@ type MessageFile struct {
 }
 
 // 请求对话数据
-type CmdRequestChat struct {
+type EventRequestChat struct {
 	Chat Chat     `db:"chat" json:"chat"` // 对话信息
 	Uids []string `db:"uids" json:"uids"` // 邀请加入对话的uid数组
 }
 
 // 请求对话消息
-type MessageCmdRequestChat struct {
+type MessageEventRequestChat struct {
 	Message
-	Cmd CmdRequestChat `db:"cmd" json:"cmd"`
+	Event EventRequestChat `db:"event" json:"event"`
 }
 
 // 加入对话数据
-type CmdJoinChat struct {
+type EventJoinChat struct {
 	Chat Chat `db:"chat" json:"chat"` // 对话信息
 }
 
 // 加入对话消息
-type MessageCmdJoinChat struct {
+type MessageEventJoinChat struct {
 	Message
-	Cmd CmdJoinChat `db:"cmd" json:"cmd"`
+	Event EventJoinChat `db:"event" json:"event"`
 }
 
 type Message2Pusher struct {
