@@ -7,22 +7,29 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hiwjd/horn/consumer/dispatcher"
+	"github.com/hiwjd/horn/consumer/persist"
 	"github.com/hiwjd/horn/mysql"
-	"github.com/hiwjd/horn/redis"
-	"github.com/hiwjd/horn/store"
 
 	"github.com/BurntSushi/toml"
 	"github.com/nsqio/go-nsq"
 )
 
+type Config struct {
+	Channel          string
+	Topic            string
+	NsqdTCPAddrs     []string
+	LookupdHTTPAddrs []string
+	MaxInFlight      int
+	MysqlConfigs     map[string]*mysql.Config
+}
+
 var (
 	configPath string
-	config     dispatcher.Config
+	config     Config
 )
 
 func init() {
-	flag.StringVar(&configPath, "c", "./dispatcher.toml", "配置文件的路径")
+	flag.StringVar(&configPath, "c", "./persist.toml", "配置文件的路径")
 }
 
 func main() {
@@ -67,12 +74,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	redisManager := redis.New(config.RedisConfigs)
 	mysqlManager := mysql.New(config.MysqlConfigs)
-	store := store.NewDefaultStore(redisManager, mysqlManager)
 
-	//consumer.AddHandler(&TailHandler{totalMessages: *totalMessages})
-	consumer.AddConcurrentHandlers(dispatcher.NewHandler(store), 4)
+	consumer.AddConcurrentHandlers(persist.NewHandler(mysqlManager), 4)
 
 	err = consumer.ConnectToNSQDs(config.NsqdTCPAddrs)
 	if err != nil {

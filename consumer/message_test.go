@@ -1,4 +1,4 @@
-package dispatcher
+package consumer
 
 import (
 	"encoding/json"

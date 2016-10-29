@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hiwjd/horn/consumer"
 	"github.com/hiwjd/horn/store"
 )
 
@@ -30,7 +31,7 @@ func getAddr2Uids(chatId string, store store.Store) map[string][]string {
 
 func textProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> textProcesser")
-	var v MessageText
+	var v consumer.MessageText
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -40,7 +41,7 @@ func textProcesser(handler *Handler, body []byte) error {
 
 	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
 	for addr, uids := range addr2uids {
-		m := &Message2Pusher{"text", uids, v}
+		m := &consumer.Message2Pusher{"text", uids, v}
 		bs, er := json.Marshal(m)
 		if er != nil {
 			log.Printf(" -> 推送前序列化消息失败: %s \r\n", er.Error())
@@ -59,7 +60,7 @@ func textProcesser(handler *Handler, body []byte) error {
 
 func imageProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> imageProcesser")
-	var v MessageImage
+	var v consumer.MessageImage
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -68,7 +69,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 
 	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
 	for addr, uids := range addr2uids {
-		m := &Message2Pusher{"image", uids, v}
+		m := &consumer.Message2Pusher{"image", uids, v}
 		bs, er := json.Marshal(m)
 		if er != nil {
 			log.Printf(" -> 推送前序列化消息失败: %s \r\n", er.Error())
@@ -87,7 +88,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 
 func fileProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> fileProcesser")
-	var v MessageFile
+	var v consumer.MessageFile
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
@@ -96,7 +97,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 
 	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
 	for addr, uids := range addr2uids {
-		m := &Message2Pusher{"file", uids, v}
+		m := &consumer.Message2Pusher{"file", uids, v}
 		bs, er := json.Marshal(m)
 		if er != nil {
 			log.Printf(" -> 推送前序列化消息失败: %s \r\n", er.Error())
