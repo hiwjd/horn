@@ -23,7 +23,8 @@ func NewHandler(mysqlManager *mysql.Manager) *Handler {
 	ps["#a"] = textProcesser
 	ps["#b"] = fileProcesser
 	ps["#c"] = imageProcesser
-	ps["#d"] = eventProcesser
+	ps["#d"] = requestChatProcesser
+	ps["#e"] = joinChatProcesser
 	return &Handler{
 		processsers:  ps,
 		mysqlManager: mysqlManager,

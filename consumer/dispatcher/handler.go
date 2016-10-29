@@ -23,7 +23,8 @@ func NewHandler(store store.Store) *Handler {
 	ps["#a"] = textProcesser
 	ps["#b"] = fileProcesser
 	ps["#c"] = imageProcesser
-	ps["#d"] = eventProcesser
+	ps["#d"] = requestChatProcesser
+	ps["#e"] = joinChatProcesser
 	return &Handler{
 		processsers: ps,
 		store:       store,
