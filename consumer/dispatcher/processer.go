@@ -123,6 +123,15 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
+	chatId := v.Event.Chat.Id
+	uid := v.From.Id
+	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
+	err = handler.store.JoinChat(v.Mid, chatId, uid)
+	if err != nil {
+		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
+		return err
+	}
+
 	// 获取被邀请对话的人的推送地址
 	addr2uids := make(map[string][]string)
 	for _, uid := range v.Event.Uids {
@@ -159,6 +168,15 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
+		return err
+	}
+
+	chatId := v.Event.Chat.Id
+	uid := v.From.Id
+	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
+	err = handler.store.JoinChat(v.Mid, chatId, uid)
+	if err != nil {
+		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
 		return err
 	}
 
