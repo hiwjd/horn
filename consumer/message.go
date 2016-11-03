@@ -1,5 +1,9 @@
 package consumer
 
+import (
+	"encoding/json"
+)
+
 // 消息来源方信息
 type From struct {
 	Id   string `db:"id" json:"id"`
@@ -82,4 +86,25 @@ type Message2Pusher struct {
 	Type string      `db:"type" json:"type"`
 	To   []string    `db:"to" json:"to"`
 	Data interface{} `db:"data" json:"data"`
+}
+
+// 访问数据
+type MessageViewPage struct {
+	TrackId string `db:"track_id" json:"track_id"`
+	Uid     string `db:"uid" json:"uid"`
+	Fp      string `db:"fb" json:"fp"`
+	Gid     string `db:"gid" json:"gid"`
+	Url     string `db:"url" json:"url"`
+	Title   string `db:"title" json:"title"`
+	Referer string `db:"referer" json:"referer"`
+	Os      string `db:"os" json:"os"`
+	Browser string `db:"browser" json:"browser"`
+	Ip      string `db:"ip" json:"ip"`
+}
+
+// 发送注册邮件
+type MessageSignupEmail struct {
+	Email string          `db:"email" json:"email"`
+	Type  string          `db:"type" json:"type"`
+	Data  json.RawMessage `db:"data" json:"data"`
 }

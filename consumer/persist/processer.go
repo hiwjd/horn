@@ -145,3 +145,33 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 
 	return nil
 }
+
+func viewPageProcesser(handler *Handler, body []byte) error {
+	log.Println(" -> viewPageProcesser")
+	var v consumer.MessageViewPage
+	err := json.Unmarshal(body, &v)
+	if err != nil {
+		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
+		return err
+	}
+
+	db, err := handler.mysqlManager.Get("write")
+	if err != nil {
+		log.Printf(" -> 获取数据库连接失败: %s \r\n", err.Error())
+		return err
+	}
+
+	sql := `
+		INSERT INTO page_views
+			(track_id, uid, fp, gid, url, title, referer, os, browser, ip)
+		VALUES
+			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?)
+	`
+	_, err = db.Exec(sql, v.TrackId, v.Uid, v.Fp, v.Gid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip)
+	if err != nil {
+		log.Printf(" -> 执行失败: %s \r\n", err.Error())
+		return err
+	}
+
+	return nil
+}

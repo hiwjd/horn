@@ -6,6 +6,7 @@ import (
 
 	"github.com/hiwjd/horn/mysql"
 
+	"github.com/hiwjd/horn/sendcloud"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -16,18 +17,22 @@ var (
 type Handler struct {
 	processsers  map[string]Processser
 	mysqlManager *mysql.Manager
+	emailSender  *sendcloud.EmailSender
 }
 
-func NewHandler(mysqlManager *mysql.Manager) *Handler {
+func NewHandler(mysqlManager *mysql.Manager, emailSender *sendcloud.EmailSender) *Handler {
 	ps := make(map[string]Processser, 4)
 	ps["#a"] = textProcesser
 	ps["#b"] = fileProcesser
 	ps["#c"] = imageProcesser
 	ps["#d"] = requestChatProcesser
 	ps["#e"] = joinChatProcesser
+	ps["#f"] = viewPageProcesser
+	ps["#g"] = signupEmailProcesser
 	return &Handler{
 		processsers:  ps,
 		mysqlManager: mysqlManager,
+		emailSender:  emailSender,
 	}
 }
 

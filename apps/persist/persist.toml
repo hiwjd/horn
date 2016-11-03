@@ -1,8 +1,10 @@
-Topic = "message"
+Topics = ["message","view_page","signup_email"]
 Channel = "persist"
 LookupdHTTPAddrs = []
 NsqdTCPAddrs = ["127.0.0.1:4150"]
 MaxInFlight = 200
+SendCloudApiUser = ""
+SendCloudApiKey = ""
 
 [MysqlConfigs]
     [MysqlConfigs.write]
