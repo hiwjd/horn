@@ -126,7 +126,15 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 	chatId := v.Event.Chat.Id
 	uid := v.From.Id
 	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
-	err = handler.store.JoinChat(v.Mid, chatId, uid)
+
+	gid := ""
+	err = handler.store.CreateChat(chatId, gid, uid, 0)
+	if err != nil {
+		log.Printf(" -> 创建对话失败: %s \r\n", err.Error())
+		return err
+	}
+
+	err = handler.store.JoinChat(v.Mid, chatId, uid, v.From.Role)
 	if err != nil {
 		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
 		return err
@@ -174,7 +182,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	chatId := v.Event.Chat.Id
 	uid := v.From.Id
 	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
-	err = handler.store.JoinChat(v.Mid, chatId, uid)
+	err = handler.store.JoinChat(v.Mid, chatId, uid, v.From.Role)
 	if err != nil {
 		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
 		return err

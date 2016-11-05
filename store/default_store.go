@@ -70,7 +70,32 @@ func (s *DefaultStore) GetPushAddrByUid(uid string) string {
 	return addr
 }
 
-func (s *DefaultStore) JoinChat(mid string, chatId string, uid string) error {
+func (s *DefaultStore) JoinChat(mid string, chatId string, uid string, role string) error {
+	db, err := s.mysqlManager.Get("write")
+	if err != nil {
+		log.Printf(" 获取mysql连接失败: %s \r\n", err.Error())
+		return err
+	}
+
+	sql := `
+	INSERT INTO 
+		chat_user(chat_id, uid, role)
+	VALUES 
+		(?,?,?)
+	`
+	_, err = db.Exec(sql, chatId, uid, role)
+	if err != nil {
+		log.Printf(" 建立对话-用户关系失败: %s \r\n", err.Error())
+		return err
+	}
+
+	sql = `UPDATE chats SET user_num=user_num+1 WHERE chat_id = ?`
+	_, err = db.Exec(sql, chatId)
+	if err != nil {
+		log.Printf(" 更新对话用户数失败: %s \r\n", err.Error())
+		return err
+	}
+
 	conn, err := s.redisManager.Get("node1")
 	if err != nil {
 		log.Printf(" 获取redis连接失败: %s \r\n", err.Error())
@@ -111,4 +136,26 @@ func (s *DefaultStore) JoinChat(mid string, chatId string, uid string) error {
 	log.Printf(" 执行结果: %v \r\n", r)
 
 	return nil
+}
+
+func (s *DefaultStore) CreateChat(chatId string, gid string, creator string, kfid int) error {
+	db, err := s.mysqlManager.Get("write")
+	if err != nil {
+		log.Printf(" 获取mysql连接失败: %s \r\n", err.Error())
+		return err
+	}
+
+	sql := `
+	INSERT INTO
+		chats(chat_id,gid,creator,kfid,user_num,state)
+	VALUES
+		(?,?,?,?,1,'request')
+	`
+	_, err = db.Exec(sql, chatId, gid, creator, kfid)
+	if err != nil {
+		log.Printf(" 创建对话失败: %s \r\n", err.Error())
+		return err
+	}
+
+	return err
 }
