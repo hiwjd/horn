@@ -22,6 +22,7 @@ type Message struct {
 	T    map[string]int `db:"t" json:"t"`       // 0:客户端发出时间戳 1:入队列时间戳 2:分发时间戳
 	Mid  string         `db:"mid" json:"mid"`   // 消息ID
 	From From           `db:"from" json:"from"` // 消息发送方信息
+	Cid  string         `db:"cid" json:"cid"`   // 公司ID
 }
 
 // 普通消息
@@ -94,7 +95,7 @@ type MessageViewPage struct {
 	TrackId string `db:"track_id" json:"track_id"`
 	Uid     string `db:"uid" json:"uid"`
 	Fp      string `db:"fb" json:"fp"`
-	Gid     string `db:"gid" json:"gid"`
+	Cid     string `db:"cid" json:"cid"`
 	Url     string `db:"url" json:"url"`
 	Title   string `db:"title" json:"title"`
 	Referer string `db:"referer" json:"referer"`

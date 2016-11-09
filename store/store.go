@@ -5,4 +5,5 @@ type Store interface {
 	GetPushAddrByUid(uid string) string
 	JoinChat(mid string, chatId string, uid string, role string) error
 	CreateChat(chatId string, gid string, creator string, kfid int) error
+	GetStaffsByCompany(cid string) []string
 }

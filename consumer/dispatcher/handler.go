@@ -25,6 +25,7 @@ func NewHandler(store store.Store) *Handler {
 	ps["#c"] = imageProcesser
 	ps["#d"] = requestChatProcesser
 	ps["#e"] = joinChatProcesser
+	ps["#f"] = viewPageProcesser
 	return &Handler{
 		processsers: ps,
 		store:       store,

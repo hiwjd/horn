@@ -159,3 +159,20 @@ func (s *DefaultStore) CreateChat(chatId string, gid string, creator string, kfi
 
 	return err
 }
+
+func (s *DefaultStore) GetStaffsByCompany(cid string) []string {
+	conn, err := s.redisManager.Get("node1")
+	if err != nil {
+		log.Printf(" 获取redis连接失败: %s \r\n", err.Error())
+		return nil
+	}
+	defer conn.Close()
+
+	rows, err := rds.Strings(conn.Do("SMEMBERS", fmt.Sprintf("company-staffs-%s", cid)))
+	if err != nil {
+		log.Printf(" redis执行失败: %s \r\n", err.Error())
+		return nil
+	}
+
+	return rows
+}
