@@ -1,5 +1,14 @@
 # horn doc
 
+## 各ID示例
+
+ - 公司ID `0DWOanOQ9IqkOd3` [15]
+ - 客服ID `9PruG3iDtBCDuy06yE2` [19]
+ - 访客ID `iFFBpjLz993KD42IrDViIkg` [23]
+ - 对话ID `ZwZSsJ8PwAKFUflsDClsa6Bh7` [25]
+ - 消息ID `b0a1qggeibm0k3lm1440` [20]
+ - 访问ID `20161103185544iFFBpjLz993KD42IrDViIkgFEUEScArt9hAfnaM` [53]
+
 ## 消息接口
 
 ### 地址
@@ -16,6 +25,7 @@ POST http://app.horn.com/api/message
 
 ```
 {
+    "cid": "公司ID",
     "mid": "消息ID 发送时该字段省略",
     "type": "text",
     "from": {
@@ -34,6 +44,7 @@ POST http://app.horn.com/api/message
 
 ```
 {
+    "cid": "公司ID",
     "mid": "消息ID 发送时该字段省略",
     "type": "file",
     "from": {
@@ -56,6 +67,7 @@ POST http://app.horn.com/api/message
 
 ```
 {
+    "cid": "公司ID",
     "mid": "消息ID 发送时该字段省略",
     "type": "image",
     "from": {
@@ -79,6 +91,7 @@ POST http://app.horn.com/api/message
 
 ```
 {
+    "cid": "公司ID",
     "mid": "消息ID 发送时该字段省略",
     "type": "event",
     "from": {
@@ -99,6 +112,7 @@ POST http://app.horn.com/api/message
 
 ```
 {
+    "cid": "公司ID",
     "mid": "消息ID 发送时该字段省略",
     "type": "event",
     "from": {
@@ -132,7 +146,7 @@ POST http://app.horn.com/api/message
 ### 地址
 
 ```
-GET http://app.horn.com/api/state/init?uid=UID&fp=FINGERPRINT
+GET http://app.horn.com/api/state/init?uid=UID&fp=FINGERPRINT&track_id=TRACKID
 ```
 
 ### 响应
@@ -176,7 +190,7 @@ POST http://app.horn.com/api/track
 {
     "uid": "用户ID",
     "fp": "指纹",
-    "gid": "公司ID",
+    "cid": "公司ID",
     "url": "当前访问地址",
     "title": "当前访问页面的标题",
     "referer": "来源页地址",
@@ -192,7 +206,7 @@ POST http://app.horn.com/api/track
 {
     "code": 0,
     "msg": "ok",
-    "track_id": ""
+    "track_id": "20161103185544iFFBpjLz993KD42IrDViIkgFEUEScArt9hAfnaM"
 }
 ```
 
@@ -219,6 +233,7 @@ GET http://<推送服务地址>/ws?uid=UID&track_id=TRACKID
     "code":0,
     "msg":"",
     "data":[{
+        "cid": "0DWOanOQ9IqkOd3",
         "type":"text",
         "t":{
             "t0":1478477956,
@@ -235,5 +250,51 @@ GET http://<推送服务地址>/ws?uid=UID&track_id=TRACKID
         },
         "text":"qqq"
     }]
+}
+```
+
+## 客服信息
+
+> 只适用于登录的客服
+
+### 地址
+
+```
+GET http://app.horn.com/api/staff/info
+```
+
+### 响应
+
+```
+{
+    "code": 0,
+    "msg": "",
+    "cid": "",
+    "staff_id": "",
+    "track_id": "",
+    "staff": {
+        "name": "",
+        "gender": ""
+    }
+}
+```
+
+## 心跳
+
+> 心跳用于维护用户（访客和客服）是否在线的状态
+
+### 地址
+
+```
+GET http://app.horn.com/api/ping?uid=UID&fp=FP&track_id=TRACKID
+```
+
+### 响应
+
+```
+{
+    "code": 0,
+    "msg": "",
+    "interval": 30 // 心跳间隔
 }
 ```
