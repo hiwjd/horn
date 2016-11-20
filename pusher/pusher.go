@@ -107,6 +107,18 @@ func (c *Pusher) Fetch(uid string, trackID string, keep time.Duration) ([]byte, 
 	}
 }
 
+func (c *Pusher) Del(uid string, trackID string) error {
+	if q, ok := c.queues[uid]; ok {
+		n := q.Del(trackID)
+		if n == 0 {
+			delete(c.queues, uid)
+		}
+		return nil
+	}
+
+	return ErrUIDNotExist
+}
+
 func (c *Pusher) Stats(uid string) map[string]interface{} {
 	if uid != "" {
 		if q, ok := c.queues[uid]; ok {

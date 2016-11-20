@@ -59,6 +59,27 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	http.HandleFunc("/del", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+		uid := r.FormValue("uid")
+		trackID := r.FormValue("trackID")
+
+		if uid == "" || trackID == "" {
+			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, "missing uid or trackID")
+			return
+		}
+
+		err := p.Del(uid, trackID)
+		if err != nil {
+			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, err.Error())
+			return
+		}
+
+		fmt.Fprintf(w, `{"code":0,"msg":"ok"}`)
+		return
+	})
+
 	http.HandleFunc("/push", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
@@ -222,14 +243,16 @@ func (c *PusherWSServer) Handle(conn *websocket.Conn) {
 		if err != nil {
 			log.Println(err)
 			if err == pusher.ErrFetchTimeout {
-				fmt.Fprintf(conn, `{"code":0,"msg":""}`)
+				_, er := fmt.Fprintf(conn, `{"code":0,"msg":""}`)
+				fmt.Println(er)
 			} else {
 				fmt.Fprintf(conn, `{"code":%d,"msg":"%s"}`, 1, err.Error())
 				conn.Close()
 				return
 			}
 		} else {
-			fmt.Fprintf(conn, `{"code":%d,"msg":"","data":%s}`, 0, bs)
+			_, er := fmt.Fprintf(conn, `{"code":%d,"msg":"","data":%s}`, 0, bs)
+			fmt.Println(er)
 		}
 	}
 }

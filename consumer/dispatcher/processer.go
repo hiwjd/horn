@@ -141,12 +141,19 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
+	cid := v.Cid
 	chatId := v.Event.Chat.Id
-	uid := v.From.Id
-	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
+	var uid, staffId string
+	if v.From.Role == "staff" {
+		uid = ""
+		staffId = v.From.Id
+	} else {
+		uid = v.From.Id
+		staffId = ""
+	}
+	log.Printf(" -> 开始维护对话状态 version:%s cid:%s chatId:%s uid:%s staffId:%s \r\n", v.Mid, cid, chatId, uid, staffId)
 
-	gid := ""
-	err = handler.store.CreateChat(chatId, gid, uid, 0)
+	err = handler.store.CreateChat(chatId, cid, uid, staffId)
 	if err != nil {
 		log.Printf(" -> 创建对话失败: %s \r\n", err.Error())
 		return err
@@ -250,6 +257,25 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 				log.Printf("  --> 推送消息成功 \r\n")
 			}
 		}
+	}
+
+	return nil
+}
+
+func timeoutProcesser(handler *Handler, body []byte) error {
+	log.Println(" -> timeoutProcesser")
+	var v consumer.MessageTimeout
+	err := json.Unmarshal(body, &v)
+	if err != nil {
+		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
+		return err
+	}
+
+	store := handler.store
+
+	chatIds := store.GetChatsByUid(v.Uid)
+	for _, chatId := range chatIds {
+		store.LeaveChat(v.Mid, chatId, v.Uid)
 	}
 
 	return nil

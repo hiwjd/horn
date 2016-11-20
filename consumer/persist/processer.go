@@ -3,6 +3,7 @@ package persist
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hiwjd/horn/consumer"
 )
@@ -11,9 +12,9 @@ type Processser func(handler *Handler, body []byte) error
 
 var sql = `
 		INSERT INTO messages
-			(mid,type,chat_id,from_uid,from_name,text,src,width,height,size,name,event)
+			(mid,type,chat_id,from_uid,from_name,from_role,text,src,width,height,size,name,event)
 		VALUES
-			(?,  ?,   ?,      ?,       ?,        ?,   ?,  ?,    ?,     ?,   ?,   ?)
+			(?,  ?,   ?,      ?,       ?,        ?,        ?,   ?,  ?,    ?,     ?,   ?,   ?)
 	`
 
 func textProcesser(handler *Handler, body []byte) error {
@@ -31,7 +32,7 @@ func textProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.Text, "", 0, 0, 0, "", "")
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.From.Role, v.Text, "", 0, 0, 0, "", "")
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -55,7 +56,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, "", v.Image.Src, v.Image.Width, v.Image.Height, v.Image.Size, "", "")
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", v.Image.Src, v.Image.Width, v.Image.Height, v.Image.Size, "", "")
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -79,7 +80,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, "", v.File.Src, 0, 0, v.File.Size, v.File.Name, "")
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", v.File.Src, 0, 0, v.File.Size, v.File.Name, "")
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -108,7 +109,7 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -137,7 +138,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -163,11 +164,25 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 
 	sql := `
 		INSERT INTO page_views
-			(track_id, uid, fp, gid, url, title, referer, os, browser, ip)
+			(track_id, uid, fp, cid, url, title, referer, os, browser, ip, addr)
 		VALUES
-			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?)
+			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?,   ?)
 	`
-	_, err = db.Exec(sql, v.TrackId, v.Uid, v.Fp, v.Gid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip)
+	_, err = db.Exec(sql, v.TrackId, v.Uid, v.Fp, v.Cid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr)
+	if err != nil {
+		log.Printf(" -> 执行失败: %s \r\n", err.Error())
+		return err
+	}
+
+	sql = `
+		INSERT INTO users
+			(uid, cid, state, fp, track_id)
+		VALUES
+			(?,   ?,   ?,     ?,  ?)
+		ON DUPLICATE KEY UPDATE
+			fp=?, track_id=?, updated_at=?
+	`
+	_, err = db.Exec(sql, v.Uid, v.Cid, "on", v.Fp, v.TrackId, v.Fp, v.TrackId, time.Now())
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err

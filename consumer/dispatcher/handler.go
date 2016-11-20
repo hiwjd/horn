@@ -26,6 +26,7 @@ func NewHandler(store store.Store) *Handler {
 	ps["#d"] = requestChatProcesser
 	ps["#e"] = joinChatProcesser
 	ps["#f"] = viewPageProcesser
+	ps["#g"] = timeoutProcesser
 	return &Handler{
 		processsers: ps,
 		store:       store,

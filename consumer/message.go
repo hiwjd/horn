@@ -102,6 +102,7 @@ type MessageViewPage struct {
 	Os      string `db:"os" json:"os"`
 	Browser string `db:"browser" json:"browser"`
 	Ip      string `db:"ip" json:"ip"`
+	Addr    string `db:"addr" josn:"addr"`
 }
 
 // 发送注册邮件
@@ -109,4 +110,12 @@ type MessageSignupEmail struct {
 	Email string          `db:"email" json:"email"`
 	Type  string          `db:"type" json:"type"`
 	Data  json.RawMessage `db:"data" json:"data"`
+}
+
+// 超时消息
+type MessageTimeout struct {
+	Type string `db:"type" json:"type"`
+	Cid  string `db:"cid" json:"cid"`
+	Uid  string `db:"uid" json:"uid"`
+	Mid  string `db:"mid" json:"mid"`
 }

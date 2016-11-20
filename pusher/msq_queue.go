@@ -155,6 +155,14 @@ func (c *LinkList) Fetch(trackID string) ([]*Node, error) {
 	return ns, nil
 }
 
+func (c *LinkList) Del(trackID string) int {
+	if _, ok := c.tracks[trackID]; ok {
+		delete(c.tracks, trackID)
+	}
+
+	return len(c.tracks)
+}
+
 // Stats 返回统计数据
 func (c *LinkList) Stats() map[string]interface{} {
 	m := make(map[string]interface{}, 2)
