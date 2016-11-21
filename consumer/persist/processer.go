@@ -168,11 +168,13 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 		VALUES
 			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?,   ?)
 	`
-	_, err = db.Exec(sql, v.TrackId, v.Uid, v.Fp, v.Cid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr)
+	r, err := db.Exec(sql, v.TrackId, v.Uid, v.Fp, v.Cid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
 	}
+	n, err := r.RowsAffected()
+	log.Printf(" -> 新增访问记录，影响行数[%d] err[%s] \r\n", n, err.Error())
 
 	sql = `
 		INSERT INTO users
@@ -182,11 +184,13 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 		ON DUPLICATE KEY UPDATE
 			fp=?, track_id=?, updated_at=?
 	`
-	_, err = db.Exec(sql, v.Uid, v.Cid, "on", v.Fp, v.TrackId, v.Fp, v.TrackId, time.Now())
+	r, err = db.Exec(sql, v.Uid, v.Cid, "on", v.Fp, v.TrackId, v.Fp, v.TrackId, time.Now())
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
 	}
+	n, err = r.RowsAffected()
+	log.Printf(" -> 新增/更新访客信息，影响行数[%d] err[%s] \r\n", n, err.Error())
 
 	return nil
 }
