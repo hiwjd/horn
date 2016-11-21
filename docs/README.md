@@ -259,7 +259,7 @@ GET http://<推送服务地址>/pull?uid=UID&track_id=TRACKID
 
 #### websocket
 ```
-GET http://<推送服务地址>/ws?uid=UID&track_id=TRACKID
+GET ws://<推送服务地址>/ws?uid=UID&track_id=TRACKID
 ```
 
 ### 响应
