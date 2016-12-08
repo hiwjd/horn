@@ -2,12 +2,12 @@
 
 ## 各ID示例
 
- - 公司ID `cid` `0DWOanOQ9IqkOd3` [15]
- - 客服ID `staff_id` `9PruG3iDtBCDuy06yE2` [19]
- - 访客ID `uid` `iFFBpjLz993KD42IrDViIkg` [23]
- - 对话ID `chat_id` `ZwZSsJ8PwAKFUflsDClsa6Bh7` [25]
+ - 组织ID `oid` `0DWOanOQ9IqkOd3` [15]
+ - 客服ID `sid` `9PruG3iDtBCDuy06yE2` [19]
+ - 访客ID `vid` `iFFBpjLz993KD42IrDViIkg` [23]
+ - 对话ID `cid` `ZwZSsJ8PwAKFUflsDClsa6Bh7` [25]
  - 消息ID `mid` `b0a1qggeibm0k3lm1440` [20]
- - 访问ID `track_id` `20161103185544iFFBpjLz993KD42IrDViIkgFEUEScArt9hAfnaM` [53]
+ - 访问ID `tid` `20161103185544iFFBpjLz993KD42IrDViIkgFEUEScArt9hAfnaM` [53]
 
 
 ## 状态数据存储位置
@@ -171,7 +171,7 @@ POST http://app.horn.com/api/message
 ### 地址
 
 ```
-GET http://app.horn.com/api/state/init?uid=UID&fp=FINGERPRINT&track_id=TRACKID
+GET http://app.horn.com/api/state/init?uid=UID&fp=FINGERPRINT&track_id=tid
 ```
 
 ### 响应
@@ -254,12 +254,12 @@ POST http://app.horn.com/api/user/track
 
 #### longpolling
 ```
-GET http://<推送服务地址>/pull?uid=UID&track_id=TRACKID
+GET http://<推送服务地址>/pull?uid=UID&track_id=tid
 ```
 
 #### websocket
 ```
-GET ws://<推送服务地址>/ws?uid=UID&track_id=TRACKID
+GET ws://<推送服务地址>/ws?uid=UID&track_id=tid
 ```
 
 ### 响应
@@ -324,7 +324,7 @@ GET http://app.horn.com/api/staff/info
 ### 地址
 
 ```
-GET http://app.horn.com/api/ping?uid=UID&fp=FP&track_id=TRACKID
+GET http://app.horn.com/api/ping?uid=UID&fp=FP&track_id=tid
 ```
 
 ### 响应
@@ -380,5 +380,26 @@ GET http://app.horn.com/api/staff/online?cid=CID
         "uid": "",
         "": ""
     }]
+}
+```
+
+## 监控支持
+
+> 如果服务想要接入监控体系，需要实现下面几个HTTP接口
+
+### 服务是否存活
+
+```
+GET http://HOST/monitor/api/ping
+```
+
+```
+{
+    "service_id": "服务ID 全局唯一",
+    "service_type": "服务类型 区分是什么类型的服务",
+    "code": 0, // 状态码
+    "interval": 5, // 建议的访问间隔
+    "msg": "ok", // 提示数据
+    "stats": [] // 统计数据
 }
 ```

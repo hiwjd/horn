@@ -85,7 +85,7 @@ func (c *Pusher) Push(uid string, data []byte) error {
 }
 
 // Fetch 获取消息
-func (c *Pusher) Fetch(uid string, trackID string, keep time.Duration) ([]byte, error) {
+func (c *Pusher) Fetch(uid string, tid string, keep time.Duration) ([]byte, error) {
 	var q *LinkList
 	var ok bool
 
@@ -93,10 +93,10 @@ func (c *Pusher) Fetch(uid string, trackID string, keep time.Duration) ([]byte, 
 		return nil, ErrUIDNotExist
 	}
 
-	notify := q.GetNotify(trackID)
+	notify := q.GetNotify(tid)
 	select {
 	case <-notify:
-		ns, err := q.Fetch(trackID)
+		ns, err := q.Fetch(tid)
 		if err != nil {
 			return nil, err
 		}
@@ -107,9 +107,9 @@ func (c *Pusher) Fetch(uid string, trackID string, keep time.Duration) ([]byte, 
 	}
 }
 
-func (c *Pusher) Del(uid string, trackID string) error {
+func (c *Pusher) Del(uid string, tid string) error {
 	if q, ok := c.queues[uid]; ok {
-		n := q.Del(trackID)
+		n := q.Del(tid)
 		if n == 0 {
 			delete(c.queues, uid)
 		}

@@ -8,9 +8,7 @@ import (
 	"syscall"
 
 	"github.com/hiwjd/horn/consumer/dispatcher"
-	"github.com/hiwjd/horn/mysql"
-	"github.com/hiwjd/horn/redis"
-	"github.com/hiwjd/horn/store"
+	"github.com/hiwjd/horn/state/remote"
 
 	"github.com/BurntSushi/toml"
 	"github.com/nsqio/go-nsq"
@@ -67,12 +65,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	redisManager := redis.New(config.RedisConfigs)
-	mysqlManager := mysql.New(config.MysqlConfigs)
-	store := store.NewDefaultStore(redisManager, mysqlManager)
+	//redisManager := redis.New(config.RedisConfigs)
+	//mysqlManager := mysql.New(config.MysqlConfigs)
+	//s := state.New(mysqlManager, redisManager)
+	s := remote.New("http://127.0.0.1:9094")
 
 	//consumer.AddHandler(&TailHandler{totalMessages: *totalMessages})
-	consumer.AddConcurrentHandlers(dispatcher.NewHandler(store), 4)
+	consumer.AddConcurrentHandlers(dispatcher.NewHandler(s), 4)
 
 	err = consumer.ConnectToNSQDs(config.NsqdTCPAddrs)
 	if err != nil {

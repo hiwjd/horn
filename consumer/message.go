@@ -6,14 +6,14 @@ import (
 
 // 消息来源方信息
 type From struct {
-	Id   string `db:"id" json:"id"`
+	Uid  string `db:"uid" json:"uid"`
 	Name string `db:"name" json:"name"`
 	Role string `db:"role" json:"role"`
 }
 
 // 对话信息
 type Chat struct {
-	Id string `db:"id" json:"id"`
+	Cid string `db:"cid" json:"cid"`
 }
 
 // 消息基本信息 会匿名组合到具体的消息里
@@ -22,7 +22,7 @@ type Message struct {
 	T    map[string]int `db:"t" json:"t"`       // 0:客户端发出时间戳 1:入队列时间戳 2:分发时间戳
 	Mid  string         `db:"mid" json:"mid"`   // 消息ID
 	From From           `db:"from" json:"from"` // 消息发送方信息
-	Cid  string         `db:"cid" json:"cid"`   // 公司ID
+	Oid  int            `db:"oid" json:"oid"`   // 公司ID
 }
 
 // 普通消息
@@ -92,10 +92,10 @@ type Message2Pusher struct {
 
 // 访问数据
 type MessageViewPage struct {
-	TrackId string `db:"track_id" json:"track_id"`
-	Uid     string `db:"uid" json:"uid"`
+	Tid     string `db:"tid" json:"tid"`
+	Vid     string `db:"vid" json:"vid"`
 	Fp      string `db:"fb" json:"fp"`
-	Cid     string `db:"cid" json:"cid"`
+	Oid     int    `db:"oid" json:"oid"`
 	Url     string `db:"url" json:"url"`
 	Title   string `db:"title" json:"title"`
 	Referer string `db:"referer" json:"referer"`
@@ -115,7 +115,7 @@ type MessageSignupEmail struct {
 // 超时消息
 type MessageTimeout struct {
 	Type string `db:"type" json:"type"`
-	Cid  string `db:"cid" json:"cid"`
+	Oid  int    `db:"oid" json:"oid"`
 	Uid  string `db:"uid" json:"uid"`
 	Mid  string `db:"mid" json:"mid"`
 }

@@ -6,19 +6,29 @@ import (
 	"time"
 
 	"github.com/hiwjd/horn/consumer"
-	"github.com/hiwjd/horn/store"
+	"github.com/hiwjd/horn/state"
 )
 
 type Processser func(handler *Handler, body []byte) error
 
-func getAddr2Uids(chatId string, store store.Store) map[string][]string {
-	uids := store.GetUidsByChatId(chatId)
-	log.Printf(" -> 获取到对话[%s]中的uids[%v] \r\n", chatId, uids)
+func getAddr2Uids(oid int, cid string, state state.State) map[string][]string {
+	uids, err := state.GetUidsInChat(oid, cid)
+	if err != nil {
+		log.Printf("state.GetUidsInChat err: %s \r\n", err.Error())
+		return nil
+	}
+	//uids := state.GetUidsByChatId(chatId)
+	log.Printf(" -> 获取到对话[%s]中的uids[%v] \r\n", cid, uids)
 
 	addr2uids := make(map[string][]string)
 
 	for _, uid := range uids {
-		addr := store.GetPushAddrByUid(uid)
+		addr, err := state.GetPushAddrByUid(oid, uid)
+		if err != nil {
+			log.Printf("state.GetPushAddrByUid err: %s \r\n", err.Error())
+			continue
+		}
+
 		log.Printf("  --> 获取到用户[%s]的推送地址[%s] \r\n", uid, addr)
 		if _, ok := addr2uids[addr]; !ok {
 			addr2uids[addr] = make([]string, 0)
@@ -29,14 +39,24 @@ func getAddr2Uids(chatId string, store store.Store) map[string][]string {
 	return addr2uids
 }
 
-func getAddr2UidsInCompany(cid string, store store.Store) map[string][]string {
-	uids := store.GetStaffsByCompany(cid)
-	log.Printf(" -> 获取到组[%s]中的uids[%v] \r\n", cid, uids)
+func getAddr2UidsInOrg(oid int, state state.State) map[string][]string {
+	uids, err := state.GetSidsInOrg(oid)
+	if err != nil {
+		log.Printf("state.GetSidsInOrg err: %s \r\n", err.Error())
+		return nil
+	}
+
+	log.Printf(" -> 获取到组[%d]中的uids[%v] \r\n", oid, uids)
 
 	addr2uids := make(map[string][]string)
 
 	for _, uid := range uids {
-		addr := store.GetPushAddrByUid(uid)
+		addr, err := state.GetPushAddrByUid(oid, uid)
+		if err != nil {
+			log.Printf("state.GetPushAddrByUid err: %s \r\n", err.Error())
+			continue
+		}
+
 		log.Printf("  --> 获取到用户[%s]的推送地址[%s] \r\n", uid, addr)
 		if _, ok := addr2uids[addr]; !ok {
 			addr2uids[addr] = make([]string, 0)
@@ -57,7 +77,7 @@ func textProcesser(handler *Handler, body []byte) error {
 	}
 	v.T["t1"] = int(time.Now().Unix())
 
-	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
+	addr2uids := getAddr2Uids(v.Oid, v.Chat.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"text", uids, v}
 		bs, er := json.Marshal(m)
@@ -85,7 +105,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
+	addr2uids := getAddr2Uids(v.Oid, v.Chat.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"image", uids, v}
 		bs, er := json.Marshal(m)
@@ -113,7 +133,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	addr2uids := getAddr2Uids(v.Chat.Id, handler.store)
+	addr2uids := getAddr2Uids(v.Oid, v.Chat.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"file", uids, v}
 		bs, er := json.Marshal(m)
@@ -141,25 +161,18 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	cid := v.Cid
-	chatId := v.Event.Chat.Id
-	var uid, staffId string
-	if v.From.Role == "staff" {
-		uid = ""
-		staffId = v.From.Id
-	} else {
-		uid = v.From.Id
-		staffId = ""
-	}
-	log.Printf(" -> 开始维护对话状态 version:%s cid:%s chatId:%s uid:%s staffId:%s \r\n", v.Mid, cid, chatId, uid, staffId)
+	oid := v.Oid
+	chatId := v.Event.Chat.Cid
+	uid := v.From.Uid
+	log.Printf(" -> 开始维护对话状态 version:%s oid:%d chatId:%s uid:%s uid:%s \r\n", v.Mid, oid, chatId, uid, uid)
 
-	err = handler.store.CreateChat(chatId, cid, uid, staffId)
+	err = handler.state.CreateChat(oid, v.Mid, chatId, uid)
 	if err != nil {
 		log.Printf(" -> 创建对话失败: %s \r\n", err.Error())
 		return err
 	}
 
-	err = handler.store.JoinChat(v.Mid, chatId, uid, v.From.Role)
+	err = handler.state.JoinChat(oid, v.Mid, chatId, uid)
 	if err != nil {
 		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
 		return err
@@ -168,8 +181,8 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 	// 获取被邀请对话的人的推送地址
 	addr2uids := make(map[string][]string)
 	for _, uid := range v.Event.Uids {
-		addr := handler.store.GetPushAddrByUid(uid)
-		log.Printf("  --> 获取到用户[%s]的推送地址[%s] \r\n", uid, addr)
+		addr, err := handler.state.GetPushAddrByUid(oid, uid)
+		log.Printf("  --> 获取到用户[%s]的推送地址[%s] err[%s] \r\n", uid, addr, err.Error())
 		if _, ok := addr2uids[addr]; !ok {
 			addr2uids[addr] = make([]string, 0)
 		}
@@ -204,17 +217,18 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	chatId := v.Event.Chat.Id
-	uid := v.From.Id
+	oid := v.Oid
+	chatId := v.Event.Chat.Cid
+	uid := v.From.Uid
 	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
-	err = handler.store.JoinChat(v.Mid, chatId, uid, v.From.Role)
+	err = handler.state.JoinChat(oid, v.Mid, chatId, uid)
 	if err != nil {
 		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
 		return err
 	}
 
 	// 通知对话中的其他人 From加入对话了
-	addr2uids := getAddr2Uids(v.Event.Chat.Id, handler.store)
+	addr2uids := getAddr2Uids(oid, v.Event.Chat.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"join_chat", uids, v}
 		bs, er := json.Marshal(m)
@@ -242,7 +256,9 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	addr2uids := getAddr2UidsInCompany(v.Cid, handler.store)
+	oid := v.Oid
+
+	addr2uids := getAddr2UidsInOrg(oid, handler.state)
 
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"view_page", uids, v}
@@ -271,11 +287,16 @@ func timeoutProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	store := handler.store
+	oid := v.Oid
+	state := handler.state
 
-	chatIds := store.GetChatsByUid(v.Uid)
+	chatIds, err := state.GetChatIdsByUid(oid, v.Uid)
+	if err != nil {
+		return err
+	}
+
 	for _, chatId := range chatIds {
-		store.LeaveChat(v.Mid, chatId, v.Uid)
+		state.LeaveChat(oid, v.Mid, chatId, v.Uid)
 	}
 
 	return nil

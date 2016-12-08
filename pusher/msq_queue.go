@@ -92,13 +92,13 @@ func (c *LinkList) notify() {
 }
 
 // GetNotify 返回消息通知channel
-func (c *LinkList) GetNotify(trackID string) <-chan bool {
+func (c *LinkList) GetNotify(tid string) <-chan bool {
 	var t *Track
 	var ok bool
-	if t, ok = c.tracks[trackID]; !ok {
+	if t, ok = c.tracks[tid]; !ok {
 		notify := make(chan bool, 1)
 		t = &Track{-1, notify}
-		c.tracks[trackID] = t
+		c.tracks[tid] = t
 		if c.head != nil {
 			notify <- true
 		}
@@ -116,19 +116,19 @@ func (c *LinkList) GetNotify(trackID string) <-chan bool {
 // [...]（这里可以点击，然后把缺了的这段消息获取回来）
 // 消息5
 // 消息6
-func (c *LinkList) Fetch(trackID string) ([]*Node, error) {
+func (c *LinkList) Fetch(tid string) ([]*Node, error) {
 	c.Lock()
 	defer c.Unlock()
 
 	var t *Track
 	var ok bool
-	if t, ok = c.tracks[trackID]; !ok {
+	if t, ok = c.tracks[tid]; !ok {
 		t = &Track{-1, make(chan bool, 1)}
-		c.tracks[trackID] = t
+		c.tracks[tid] = t
 	}
 
 	log.Println("")
-	log.Printf(" -> trackID:%s \r\n", trackID)
+	log.Printf(" -> tid:%s \r\n", tid)
 	log.Printf(" -> track:%+v \r\n", t)
 	log.Printf(" -> link:%+v \r\n\r\n", c)
 
@@ -155,9 +155,9 @@ func (c *LinkList) Fetch(trackID string) ([]*Node, error) {
 	return ns, nil
 }
 
-func (c *LinkList) Del(trackID string) int {
-	if _, ok := c.tracks[trackID]; ok {
-		delete(c.tracks, trackID)
+func (c *LinkList) Del(tid string) int {
+	if _, ok := c.tracks[tid]; ok {
+		delete(c.tracks, tid)
 	}
 
 	return len(c.tracks)

@@ -63,14 +63,14 @@ func main() {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 		uid := r.FormValue("uid")
-		trackID := r.FormValue("trackID")
+		tid := r.FormValue("tid")
 
-		if uid == "" || trackID == "" {
-			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, "missing uid or trackID")
+		if uid == "" || tid == "" {
+			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, "missing uid or tid")
 			return
 		}
 
-		err := p.Del(uid, trackID)
+		err := p.Del(uid, tid)
 		if err != nil {
 			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, err.Error())
 			return
@@ -140,10 +140,10 @@ func main() {
 		q := r.URL.Query()
 
 		uid := q.Get("uid")
-		trackID := q.Get("track_id")
-		log.Printf("/pull uid:%s track_id:%s \r\n", uid, trackID)
-		if uid == "" || trackID == "" {
-			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, "uid or trackID missing")
+		tid := q.Get("track_id")
+		log.Printf("/pull uid:%s track_id:%s \r\n", uid, tid)
+		if uid == "" || tid == "" {
+			fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 1, "uid or tid missing")
 			return
 		}
 
@@ -163,7 +163,7 @@ func main() {
 		log.Printf(" -> keep: %d \r\n", keepInt)
 		keepDuration := time.Duration(keepInt) * time.Second
 
-		bs, err := p.Fetch(uid, trackID, keepDuration)
+		bs, err := p.Fetch(uid, tid, keepDuration)
 		if err != nil {
 			if err == pusher.ErrFetchTimeout {
 				fmt.Fprintf(w, `{"code":%d,"msg":"%s"}`, 0, "")
@@ -215,8 +215,8 @@ func (c *PusherWSServer) Handle(conn *websocket.Conn) {
 	q := conn.Request().URL.Query()
 
 	uid := q.Get("uid")
-	trackID := q.Get("track_id")
-	if uid == "" || trackID == "" {
+	tid := q.Get("track_id")
+	if uid == "" || tid == "" {
 		fmt.Fprintf(conn, `{"code":0,"msg":"uid or track_id empty"}`)
 		conn.Close()
 		return
@@ -239,7 +239,7 @@ func (c *PusherWSServer) Handle(conn *websocket.Conn) {
 	keepDuration := time.Duration(keepInt) * time.Second
 
 	for {
-		bs, err := c.p.Fetch(uid, trackID, keepDuration)
+		bs, err := c.p.Fetch(uid, tid, keepDuration)
 		if err != nil {
 			log.Println(err)
 			if err == pusher.ErrFetchTimeout {

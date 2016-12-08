@@ -1,0 +1,23 @@
+[MysqlConfigs]
+    [MysqlConfigs.write]
+    User = "horn"
+    Pass = "HornMima1@#"
+    Addr = "127.0.0.1:3306"
+    Protocol = "tcp"
+    Dbname = "horn"
+
+    [MysqlConfigs.read]
+    User = "horn"
+    Pass = "HornMima1@#"
+    Addr = "127.0.0.1:3306"
+    Protocol = "tcp"
+    Dbname = "horn"
+
+[RedisConfigs]
+    [RedisConfigs.node1]
+    Addr = "127.0.0.1:6379"
+    Pass = ""
+
+    [RedisConfigs.node2]
+    Addr = "127.0.0.1:6379"
+    Pass = ""

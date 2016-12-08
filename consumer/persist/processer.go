@@ -32,7 +32,7 @@ func textProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.From.Role, v.Text, "", 0, 0, 0, "", "")
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, v.Text, "", 0, 0, 0, "", "")
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -56,7 +56,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", v.Image.Src, v.Image.Width, v.Image.Height, v.Image.Size, "", "")
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, "", v.Image.Src, v.Image.Width, v.Image.Height, v.Image.Size, "", "")
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -80,7 +80,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", v.File.Src, 0, 0, v.File.Size, v.File.Name, "")
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, "", v.File.Src, 0, 0, v.File.Size, v.File.Name, "")
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -109,7 +109,7 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -138,7 +138,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Id, v.From.Id, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Type, v.Event.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -164,11 +164,11 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 
 	sql := `
 		INSERT INTO page_views
-			(track_id, uid, fp, cid, url, title, referer, os, browser, ip, addr)
+			(tid, vid, fp, oid, url, title, referer, os, browser, ip, addr)
 		VALUES
 			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?,   ?)
 	`
-	r, err := db.Exec(sql, v.TrackId, v.Uid, v.Fp, v.Cid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr)
+	r, err := db.Exec(sql, v.Tid, v.Vid, v.Fp, v.Oid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -177,14 +177,14 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 	log.Printf(" -> 新增访问记录，影响行数[%d] err[%s] \r\n", n, err.Error())
 
 	sql = `
-		INSERT INTO users
-			(uid, cid, state, fp, track_id)
+		INSERT INTO visitors
+			(vid, oid, state, fp, tid)
 		VALUES
 			(?,   ?,   ?,     ?,  ?)
 		ON DUPLICATE KEY UPDATE
-			fp=?, track_id=?, updated_at=?
+			fp=?, tid=?, updated_at=?
 	`
-	r, err = db.Exec(sql, v.Uid, v.Cid, "on", v.Fp, v.TrackId, v.Fp, v.TrackId, time.Now())
+	r, err = db.Exec(sql, v.Vid, v.Oid, "on", v.Fp, v.Tid, v.Fp, v.Tid, time.Now())
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err

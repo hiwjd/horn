@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/hiwjd/horn/store"
+	"github.com/hiwjd/horn/state"
 
 	"github.com/nsqio/go-nsq"
 )
@@ -15,10 +15,10 @@ var (
 
 type Handler struct {
 	processsers map[string]Processser
-	store       store.Store
+	state       state.State
 }
 
-func NewHandler(store store.Store) *Handler {
+func NewHandler(state state.State) *Handler {
 	ps := make(map[string]Processser, 4)
 	ps["#a"] = textProcesser
 	ps["#b"] = fileProcesser
@@ -29,7 +29,7 @@ func NewHandler(store store.Store) *Handler {
 	ps["#g"] = timeoutProcesser
 	return &Handler{
 		processsers: ps,
-		store:       store,
+		state:       state,
 	}
 }
 
