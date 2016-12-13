@@ -1,6 +1,7 @@
 package state
 
 import (
+	"database/sql"
 	"log"
 
 	"github.com/hiwjd/horn/mysql"
@@ -70,11 +71,28 @@ func (s *staff) onlineStaffList(c *ctx) ([]*Staff, error) {
 	}
 
 	var staffs []*Staff
-	sql := "select * from staff where oid = ? and state = 'on'"
-	err = db.Select(&staffs, sql, c.oid)
-	if err != nil {
+	ss := "select * from staff where oid = ? and state = 'on'"
+	err = db.Select(&staffs, ss, c.oid)
+	if err == sql.ErrNoRows {
 		return nil, err
 	}
 
-	return staffs, nil
+	return staffs, err
+}
+
+func (s *staff) getStaff(c *ctx, sid string) (*Staff, error) {
+	db, err := s.mysqlManager.Get("write")
+	if err != nil {
+		log.Printf(" 获取mysql连接失败: %s \r\n", err.Error())
+		return nil, err
+	}
+
+	var staff Staff
+	ss := "select * from staff where oid = ? and sid = ?"
+	err = db.Get(&staff, ss, c.oid, sid)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &staff, err
 }

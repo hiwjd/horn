@@ -2,13 +2,19 @@
 
 ## 各ID示例
 
- - 组织ID `oid` `0DWOanOQ9IqkOd3` [15]
+ - 组织ID `oid` `3` [mysql自增ID]
  - 客服ID `sid` `9PruG3iDtBCDuy06yE2` [19]
  - 访客ID `vid` `iFFBpjLz993KD42IrDViIkg` [23]
  - 对话ID `cid` `ZwZSsJ8PwAKFUflsDClsa6Bh7` [25]
  - 消息ID `mid` `b0a1qggeibm0k3lm1440` [20]
  - 访问ID `tid` `20161103185544iFFBpjLz993KD42IrDViIkgFEUEScArt9hAfnaM` [53]
 
+## 约定
+golang中操作数据库，如果返回的数据行不存在，则约定返回nil
+
+## 状态服务接口
+
+### 
 
 ## 状态数据存储位置
 

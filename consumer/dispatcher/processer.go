@@ -17,7 +17,7 @@ func getAddr2Uids(oid int, cid string, state state.State) map[string][]string {
 		log.Printf("state.GetUidsInChat err: %s \r\n", err.Error())
 		return nil
 	}
-	//uids := state.GetUidsByChatId(chatId)
+
 	log.Printf(" -> 获取到对话[%s]中的uids[%v] \r\n", cid, uids)
 
 	addr2uids := make(map[string][]string)
@@ -77,7 +77,7 @@ func textProcesser(handler *Handler, body []byte) error {
 	}
 	v.T["t1"] = int(time.Now().Unix())
 
-	addr2uids := getAddr2Uids(v.Oid, v.Chat.Cid, handler.state)
+	addr2uids := getAddr2Uids(v.Oid, v.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"text", uids, v}
 		bs, er := json.Marshal(m)
@@ -105,7 +105,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	addr2uids := getAddr2Uids(v.Oid, v.Chat.Cid, handler.state)
+	addr2uids := getAddr2Uids(v.Oid, v.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"image", uids, v}
 		bs, er := json.Marshal(m)
@@ -133,7 +133,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	addr2uids := getAddr2Uids(v.Oid, v.Chat.Cid, handler.state)
+	addr2uids := getAddr2Uids(v.Oid, v.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"file", uids, v}
 		bs, er := json.Marshal(m)
@@ -154,6 +154,9 @@ func fileProcesser(handler *Handler, body []byte) error {
 
 func requestChatProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> requestChatProcesser")
+	state := handler.state
+
+	// 从队列里获取到的数据解析成请求对话的数据结构
 	var v consumer.MessageEventRequestChat
 	err := json.Unmarshal(body, &v)
 	if err != nil {
@@ -161,28 +164,57 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
+	mid := v.Mid
 	oid := v.Oid
-	chatId := v.Event.Chat.Cid
 	uid := v.From.Uid
-	log.Printf(" -> 开始维护对话状态 version:%s oid:%d chatId:%s uid:%s uid:%s \r\n", v.Mid, oid, chatId, uid, uid)
+	cid := v.Event.Chat.Cid
+	tid := v.Event.Chat.Tid
+	vid := v.Event.Chat.Vid
+	sid := v.Event.Chat.Sid
 
-	err = handler.state.CreateChat(oid, v.Mid, chatId, uid)
+	// 补全对话数据 访客信息
+	v.Event.Chat.Visitor, err = state.GetVisitor(oid, vid)
+	if err != nil {
+		log.Printf(" -> 补全对话数据[访客信息]出错: %s \r\n", err.Error())
+		return err
+	}
+
+	// 补全对话数据 客服信息
+	v.Event.Chat.Staff, err = state.GetStaff(oid, sid)
+	if err != nil {
+		log.Printf(" -> 补全对话数据[客服信息]出错: %s \r\n", err.Error())
+		return err
+	}
+
+	// 补全对话数据 访客访问轨迹
+	v.Event.Chat.Tracks, err = state.GetVisitorLastTracks(oid, vid, 5)
+	if err != nil {
+		log.Printf(" -> 补全对话数据[访客访问轨迹]出错: %s \r\n", err.Error())
+		return err
+	}
+
+	// 创建对话
+	log.Printf(" -> 开始维护对话状态 version:%s oid:%d chatId:%s uid:%s sid:%s vid:%s tid:%s \r\n", v.Mid, oid, cid, uid, uid, vid, tid)
+	err = handler.state.CreateChat(oid, mid, cid, uid, sid, vid, tid)
 	if err != nil {
 		log.Printf(" -> 创建对话失败: %s \r\n", err.Error())
 		return err
 	}
 
-	err = handler.state.JoinChat(oid, v.Mid, chatId, uid)
-	if err != nil {
-		log.Printf(" -> 维护对话状态失败: %s \r\n", err.Error())
-		return err
-	}
+	// 对话参与人
+	uids := make([]string, 2)
+	uids[0] = v.Event.Chat.Sid
+	uids[1] = v.Event.Chat.Vid
 
 	// 获取被邀请对话的人的推送地址
 	addr2uids := make(map[string][]string)
-	for _, uid := range v.Event.Uids {
+	for _, uid := range uids {
 		addr, err := handler.state.GetPushAddrByUid(oid, uid)
-		log.Printf("  --> 获取到用户[%s]的推送地址[%s] err[%s] \r\n", uid, addr, err.Error())
+		if err != nil {
+			log.Printf("  -> 获取用户[%s]推送地址时出错[%s] \r\n", uid, err.Error())
+			continue
+		}
+		log.Printf("  --> 获取到用户[%s]的推送地址[%s] \r\n", uid, addr)
 		if _, ok := addr2uids[addr]; !ok {
 			addr2uids[addr] = make([]string, 0)
 		}
@@ -213,12 +245,12 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	var v consumer.MessageEventJoinChat
 	err := json.Unmarshal(body, &v)
 	if err != nil {
-		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
+		log.Printf(" -> 解析消息失败: %s %s \r\n", string(body), err.Error())
 		return err
 	}
 
 	oid := v.Oid
-	chatId := v.Event.Chat.Cid
+	chatId := v.Event.Cid
 	uid := v.From.Uid
 	log.Printf(" -> 开始维护对话状态 version:%s chatId:%s uid:%s \r\n", v.Mid, chatId, uid)
 	err = handler.state.JoinChat(oid, v.Mid, chatId, uid)
@@ -228,7 +260,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	}
 
 	// 通知对话中的其他人 From加入对话了
-	addr2uids := getAddr2Uids(oid, v.Event.Chat.Cid, handler.state)
+	addr2uids := getAddr2Uids(oid, v.Event.Cid, handler.state)
 	for addr, uids := range addr2uids {
 		m := &consumer.Message2Pusher{"join_chat", uids, v}
 		bs, er := json.Marshal(m)
@@ -249,7 +281,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 
 func viewPageProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> viewPageProcesser")
-	var v consumer.MessageViewPage
+	var v state.Track
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())

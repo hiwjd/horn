@@ -72,13 +72,16 @@ func (c *remoteState) VisitorOffline(oid int, mid string, vid string) error {
 }
 
 // 创建对话
-func (c *remoteState) CreateChat(oid int, mid string, cid string, uid string) error {
+func (c *remoteState) CreateChat(oid int, mid string, cid, creator, sid, vid, tid string) error {
 	path := fmt.Sprintf("%s/api/state/chat/create", c.apihost)
 	values := url.Values{
-		"oid": {strconv.Itoa(oid)},
-		"mid": {mid},
-		"cid": {cid},
-		"uid": {uid},
+		"oid":     {strconv.Itoa(oid)},
+		"mid":     {mid},
+		"cid":     {cid},
+		"creator": {creator},
+		"sid":     {sid},
+		"vid":     {vid},
+		"tid":     {tid},
 	}
 
 	return post1(path, values)
@@ -275,6 +278,118 @@ func (c *remoteState) GetSidsInOrg(oid int) ([]string, error) {
 
 	if resp.StatusCode == http.StatusOK {
 		var r []string
+		err = json.Unmarshal(bs, &r)
+		if err != nil {
+			return nil, err
+		}
+
+		return r, nil
+	} else {
+		var r struct {
+			Error string
+		}
+		err = json.Unmarshal(bs, &r)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, errors.New(r.Error)
+	}
+}
+
+func (c *remoteState) GetVisitor(oid int, vid string) (*state.Visitor, error) {
+	path := fmt.Sprintf("%s/api/state/visitor/info", c.apihost)
+	values := url.Values{
+		"oid": {strconv.Itoa(oid)},
+		"vid": {vid},
+	}
+
+	path = fmt.Sprintf("%s?%s", path, values.Encode())
+	resp, err := http.Get(path)
+
+	defer resp.Body.Close()
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		var r state.Visitor
+		err = json.Unmarshal(bs, &r)
+		if err != nil {
+			return nil, err
+		}
+
+		return &r, nil
+	} else {
+		var r struct {
+			Error string
+		}
+		err = json.Unmarshal(bs, &r)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, errors.New(r.Error)
+	}
+}
+
+func (c *remoteState) GetStaff(oid int, sid string) (*state.Staff, error) {
+	path := fmt.Sprintf("%s/api/state/staff/info", c.apihost)
+	values := url.Values{
+		"oid": {strconv.Itoa(oid)},
+		"sid": {sid},
+	}
+
+	path = fmt.Sprintf("%s?%s", path, values.Encode())
+	resp, err := http.Get(path)
+
+	defer resp.Body.Close()
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		var r state.Staff
+		err = json.Unmarshal(bs, &r)
+		if err != nil {
+			return nil, err
+		}
+
+		return &r, nil
+	} else {
+		var r struct {
+			Error string
+		}
+		err = json.Unmarshal(bs, &r)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, errors.New(r.Error)
+	}
+}
+
+func (c *remoteState) GetVisitorLastTracks(oid int, vid string, limit int) ([]*state.Track, error) {
+	path := fmt.Sprintf("%s/api/state/visitor/tracks/last", c.apihost)
+	values := url.Values{
+		"oid":   {strconv.Itoa(oid)},
+		"vid":   {vid},
+		"limit": {strconv.Itoa(limit)},
+	}
+
+	path = fmt.Sprintf("%s?%s", path, values.Encode())
+	resp, err := http.Get(path)
+
+	defer resp.Body.Close()
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		var r []*state.Track
 		err = json.Unmarshal(bs, &r)
 		if err != nil {
 			return nil, err

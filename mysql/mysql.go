@@ -56,7 +56,7 @@ func (m *Manager) getCfg(tag string) (*Config, error) {
 }
 
 func open(cfg *Config) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@%s(%s)/%s?charset=utf8&collation=utf8_general_ci",
+	dsn := fmt.Sprintf("%s:%s@%s(%s)/%s?charset=utf8&collation=utf8_general_ci&parseTime=true",
 		cfg.User, cfg.Pass, cfg.Protocol, cfg.Addr, cfg.Dbname)
 	db, err := sqlx.Connect("mysql", dsn)
 	if err != nil {

@@ -44,7 +44,9 @@ func TestVisitorOffline(t *testing.T) {
 
 func TestStaffCreateChat_LeaveChat(t *testing.T) {
 	cid := utils.RandString(25)
-	err := c.CreateChat(oid, mid, cid, sid)
+	tid := utils.RandString(53)
+	vid := utils.RandString(23)
+	err := c.CreateChat(oid, mid, cid, sid, sid, vid, tid)
 	assert.Equal(t, nil, err, "客服创建对话应该成功")
 
 	cids, err := c.GetChatIdsByUid(oid, sid)
@@ -69,7 +71,8 @@ func TestStaffCreateChat_LeaveChat(t *testing.T) {
 
 func TestVisitorCreateChat_LeaveChat(t *testing.T) {
 	cid := utils.RandString(25)
-	err := c.CreateChat(oid, mid, cid, vid)
+	tid := utils.RandString(53)
+	err := c.CreateChat(oid, mid, cid, vid, sid, vid, tid)
 	assert.Equal(t, nil, err, "访客创建对话应该成功")
 
 	cids, err := c.GetChatIdsByUid(oid, vid)
@@ -96,4 +99,22 @@ func TestGetPushAddrByUid(t *testing.T) {
 	addr, err := c.GetPushAddrByUid(oid, vid)
 	assert.Equal(t, nil, err, "访客创建对话应该成功")
 	assert.NotEmpty(t, addr, "访客创建对话应该成功")
+}
+
+func TestGetStaff(t *testing.T) {
+	staff, err := c.GetStaff(oid, sid)
+	assert.Equal(t, nil, err, "获取客服信息应该成功")
+	assert.NotEmpty(t, staff, "获取客服信息应该成功")
+}
+
+func TestGetVisitor(t *testing.T) {
+	visitor, err := c.GetVisitor(oid, vid)
+	assert.Equal(t, nil, err, "获取访客信息应该成功")
+	assert.NotEmpty(t, visitor, "获取访客信息应该成功")
+}
+
+func TestGetVisitorLastTracks(t *testing.T) {
+	tracks, err := c.GetVisitorLastTracks(oid, vid, 5)
+	assert.Equal(t, nil, err, "获取访客访问轨迹应该成功")
+	assert.NotEmpty(t, tracks, "获取访客访问轨迹应该成功")
 }

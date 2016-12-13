@@ -14,29 +14,20 @@ type chat struct {
 	redisManager *redis.Manager
 }
 
-func (s *chat) create(c *ctx, cid, uid string) error {
+func (s *chat) create(c *ctx, cid, creator, sid, vid, tid string) error {
 	db, err := s.mysqlManager.Get("write")
 	if err != nil {
 		log.Printf(" 获取mysql连接失败: %s \r\n", err.Error())
 		return err
 	}
 
-	var vid, sid string
-	if isSid(uid) {
-		sid = uid
-	} else if isVid(uid) {
-		vid = uid
-	} else {
-		return ErrInvalidUid
-	}
-
 	sql := `
 	INSERT INTO
-		chats(cid,oid,creator,vid,sid,user_num,state)
+		chats(cid,oid,creator,vid,sid,tid,user_num,state)
 	VALUES
-		(?,?,?,?,?,1,'request')
+		(?,?,?,?,?,?,1,'request')
 	`
-	r, err := db.Exec(sql, cid, c.oid, uid, vid, sid)
+	r, err := db.Exec(sql, cid, c.oid, creator, vid, sid, tid)
 	if err != nil {
 		log.Printf(" 创建对话失败: %s \r\n", err.Error())
 		return err
@@ -57,10 +48,10 @@ func (s *chat) create(c *ctx, cid, uid string) error {
 	VALUES 
 		(?,?,?)
 	`
-	role := getRole(uid)
-	r, err = db.Exec(sql, cid, uid, role)
+	role := getRole(creator)
+	r, err = db.Exec(sql, cid, creator, role)
 	if err != nil {
-		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, uid, role, err.Error())
+		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, creator, role, err.Error())
 		return err
 	}
 
@@ -94,17 +85,6 @@ func (s *chat) addUser(c *ctx, cid, uid string) error {
 	_, err = db.Exec(sql, cid, uid, role)
 	if err != nil {
 		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, uid, role, err.Error())
-		return err
-	}
-
-	if role == "staff" {
-		sql = `UPDATE chats SET sid=? WHERE cid = ? and sid = ''`
-	} else {
-		sql = `UPDATE chats SET vid=? WHERE cid = ? and vid = ''`
-	}
-	_, err = db.Exec(sql, uid, cid)
-	if err != nil {
-		log.Printf(" 更新对话用户 角色[%s] ID[%s] 失败: %s \r\n", role, uid, err.Error())
 		return err
 	}
 

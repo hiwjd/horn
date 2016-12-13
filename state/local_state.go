@@ -46,9 +46,9 @@ func (s *localState) VisitorOffline(oid int, mid string, vid string) error {
 	return s.vm.offline(c, vid)
 }
 
-func (s *localState) CreateChat(oid int, mid string, cid, uid string) error {
+func (s *localState) CreateChat(oid int, mid string, cid, creator, sid, vid, tid string) error {
 	c := &ctx{oid, mid}
-	return s.cm.create(c, cid, uid)
+	return s.cm.create(c, cid, creator, sid, vid, tid)
 }
 
 func (s *localState) JoinChat(oid int, mid string, cid, uid string) error {
@@ -84,4 +84,19 @@ func (s *localState) GetPushAddrByUid(oid int, uid string) (string, error) {
 func (s *localState) GetSidsInOrg(oid int) ([]string, error) {
 	c := &ctx{oid, ""}
 	return s.om.getSidsInOrg(c)
+}
+
+func (s *localState) GetVisitor(oid int, vid string) (*Visitor, error) {
+	c := &ctx{oid, ""}
+	return s.vm.getVisitor(c, vid)
+}
+
+func (s *localState) GetStaff(oid int, sid string) (*Staff, error) {
+	c := &ctx{oid, ""}
+	return s.sm.getStaff(c, sid)
+}
+
+func (s *localState) GetVisitorLastTracks(oid int, vid string, limit int) ([]*Track, error) {
+	c := &ctx{oid, ""}
+	return s.vm.getVisitorLastTracks(c, vid, limit)
 }

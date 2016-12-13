@@ -3,6 +3,10 @@ package state
 import (
 	"log"
 
+	"database/sql"
+
+	"fmt"
+
 	"github.com/hiwjd/horn/mysql"
 	"github.com/hiwjd/horn/redis"
 )
@@ -60,4 +64,38 @@ func (s *visitor) offline(c *ctx, vid string) error {
 	}
 
 	return nil
+}
+
+func (s *visitor) getVisitor(c *ctx, vid string) (*Visitor, error) {
+	db, err := s.mysqlManager.Get("write")
+	if err != nil {
+		log.Printf(" 获取mysql连接失败: %s \r\n", err.Error())
+		return nil, err
+	}
+
+	ss := "select * from visitors where oid=? and vid=?"
+	var visitor Visitor
+	err = db.Get(&visitor, ss, c.oid, vid)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &visitor, err
+}
+
+func (s *visitor) getVisitorLastTracks(c *ctx, vid string, limit int) ([]*Track, error) {
+	db, err := s.mysqlManager.Get("write")
+	if err != nil {
+		log.Printf(" 获取mysql连接失败: %s \r\n", err.Error())
+		return nil, err
+	}
+
+	ss := fmt.Sprintf("select * from tracks where oid=? and vid=? order by created_at desc limit %d", limit)
+	var tracks []*Track
+	err = db.Select(&tracks, ss, c.oid, vid)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+
+	return tracks, err
 }

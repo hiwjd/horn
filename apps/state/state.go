@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 
 	"strconv"
@@ -23,6 +24,16 @@ var (
 
 func init() {
 	flag.StringVar(&configPath, "c", "./state.toml", "配置文件的路径")
+}
+
+func logRequest(r *http.Request) {
+	dump, err := httputil.DumpRequest(r, true)
+	if err != nil {
+		log.Printf("输出请求出错, %s \r\n", err.Error())
+		return
+	}
+
+	log.Printf("\r\n%s \r\n", dump)
 }
 
 func main() {
@@ -49,6 +60,7 @@ func main() {
 
 	// POSTS 客服上线
 	http.HandleFunc("/api/state/staff/online", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -98,6 +110,7 @@ func main() {
 
 	// POST 客服下线
 	http.HandleFunc("/api/state/staff/offline", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -127,6 +140,7 @@ func main() {
 	// POST 访客上线
 	// GET 在线访客列表
 	http.HandleFunc("/api/state/visitor/online", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -155,6 +169,7 @@ func main() {
 
 	// POST 访客下线
 	http.HandleFunc("/api/state/visitor/offline", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -183,6 +198,7 @@ func main() {
 
 	// POST 创建对话
 	http.HandleFunc("/api/state/chat/create", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -193,9 +209,12 @@ func main() {
 			}
 			mid := r.FormValue("mid")
 			cid := r.FormValue("cid")
-			uid := r.FormValue("uid")
+			creator := r.FormValue("creator")
+			sid := r.FormValue("sid")
+			vid := r.FormValue("vid")
+			tid := r.FormValue("tid")
 
-			err = stateService.CreateChat(oid, mid, cid, uid)
+			err = stateService.CreateChat(oid, mid, cid, creator, sid, vid, tid)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
@@ -210,6 +229,7 @@ func main() {
 
 	// POST 客服/访客加入对话
 	http.HandleFunc("/api/state/chat/join", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -237,6 +257,7 @@ func main() {
 
 	// POST 客服/访客离开对话
 	http.HandleFunc("/api/state/chat/leave", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodPost:
 			oid, err := strconv.Atoi(r.FormValue("oid"))
@@ -264,6 +285,7 @@ func main() {
 
 	// GET 获取对话用户列表
 	http.HandleFunc("/api/state/chat/uids", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodGet:
 			q := r.URL.Query()
@@ -297,6 +319,7 @@ func main() {
 
 	// GET 根据用户获取对话ID
 	http.HandleFunc("/api/state/user/cids", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodGet:
 			q := r.URL.Query()
@@ -330,6 +353,7 @@ func main() {
 
 	// GET 根据用户获取推送地址
 	http.HandleFunc("/api/state/user/pusher_addr", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodGet:
 			q := r.URL.Query()
@@ -363,6 +387,7 @@ func main() {
 
 	// GET 根据组织ID获取所有的客服ID
 	http.HandleFunc("/api/state/org/sids", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
 		switch r.Method {
 		case http.MethodGet:
 			q := r.URL.Query()
@@ -379,6 +404,114 @@ func main() {
 				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
 			} else {
 				bs, err := json.Marshal(sids)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+					return
+				}
+
+				w.Write(bs)
+			}
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Fprintf(w, `{"error":"%s"}`, http.StatusText(http.StatusMethodNotAllowed))
+		}
+	})
+
+	// GET 获取客服信息
+	http.HandleFunc("/api/state/staff/info", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
+		switch r.Method {
+		case http.MethodGet:
+			q := r.URL.Query()
+			oid, err := strconv.Atoi(q.Get("oid"))
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+				return
+			}
+			sid := q.Get("sid")
+
+			staff, err := stateService.GetStaff(oid, sid)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+			} else {
+				bs, err := json.Marshal(staff)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+					return
+				}
+
+				w.Write(bs)
+			}
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Fprintf(w, `{"error":"%s"}`, http.StatusText(http.StatusMethodNotAllowed))
+		}
+	})
+
+	// GET 获取访客信息
+	http.HandleFunc("/api/state/visitor/info", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
+		switch r.Method {
+		case http.MethodGet:
+			q := r.URL.Query()
+			oid, err := strconv.Atoi(q.Get("oid"))
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+				return
+			}
+			vid := q.Get("vid")
+
+			visitor, err := stateService.GetVisitor(oid, vid)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+			} else {
+				bs, err := json.Marshal(visitor)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+					return
+				}
+
+				w.Write(bs)
+			}
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Fprintf(w, `{"error":"%s"}`, http.StatusText(http.StatusMethodNotAllowed))
+		}
+	})
+
+	// GET 获取访客最新轨迹记录
+	http.HandleFunc("/api/state/visitor/tracks/last", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
+		switch r.Method {
+		case http.MethodGet:
+			q := r.URL.Query()
+			oid, err := strconv.Atoi(q.Get("oid"))
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+				return
+			}
+			limit, err := strconv.Atoi(q.Get("limit"))
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+				return
+			}
+			vid := q.Get("vid")
+
+			tracks, err := stateService.GetVisitorLastTracks(oid, vid, limit)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, `{"error":"%s"}`, err.Error())
+			} else {
+				bs, err := json.Marshal(tracks)
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					fmt.Fprintf(w, `{"error":"%s"}`, err.Error())

@@ -116,8 +116,10 @@ func TestStaffCreateChat_LeaveChat(t *testing.T) {
 	mid := "fake_mid"
 	cid := utils.RandString(25)
 	sid := "3rUUyOImiv0c2JKelNc"
+	tid := ""
+	vid := utils.RandString(23)
 
-	err := ss.CreateChat(oid, mid, cid, sid)
+	err := ss.CreateChat(oid, mid, cid, sid, sid, vid, tid)
 	assert.Equal(t, nil, err, "客服创建对话应该成功")
 
 	err = ss.LeaveChat(oid, mid, cid, sid)
@@ -142,8 +144,10 @@ func TestVisitorCreateChat_LeaveChat(t *testing.T) {
 	mid := "fake_mid"
 	cid := utils.RandString(25)
 	vid := "SFnvhYMhKzIb9sIaVuvCN9H"
+	tid := ""
+	sid := utils.RandString(19)
 
-	err := ss.CreateChat(oid, mid, cid, vid)
+	err := ss.CreateChat(oid, mid, cid, vid, sid, vid, tid)
 	assert.Equal(t, nil, err, "访客创建对话应该成功")
 
 	err = ss.LeaveChat(oid, mid, cid, vid)
@@ -169,8 +173,9 @@ func TestStaffCreateChat_VisitorJoin_GetUids_VistorLeave_GetUids_StaffLeave_GetU
 	cid := utils.RandString(25)
 	sid := "3rUUyOImiv0c2JKelNc"
 	vid := "SFnvhYMhKzIb9sIaVuvCN9H"
+	tid := ""
 
-	err := ss.CreateChat(oid, mid, cid, sid)
+	err := ss.CreateChat(oid, mid, cid, sid, sid, vid, tid)
 	assert.Equal(t, nil, err, "客服创建对话应该成功")
 
 	cids, err := ss.GetChatIdsByUid(oid, sid)
@@ -209,4 +214,58 @@ func TestStaffCreateChat_VisitorJoin_GetUids_VistorLeave_GetUids_StaffLeave_GetU
 	uids, err = ss.GetUidsInChat(oid, cid)
 	assert.Equal(t, nil, err, "对话["+cid+"]中的uid不正确")
 	assert.Empty(t, uids, "对话["+cid+"]中的uid不正确")
+}
+
+func TestGetStaff(t *testing.T) {
+	oid := 1
+	sid := "3rUUyOImiv0c2JKelNc"
+
+	staff, err := ss.GetStaff(oid, sid)
+	assert.Equal(t, nil, err, "获取客服信息应该成功")
+	assert.NotNil(t, staff, "获取客服信息应该成功，不是nil")
+}
+
+func TestGetStaffNotExists(t *testing.T) {
+	oid := 1
+	sid := "xxx"
+
+	staff, err := ss.GetStaff(oid, sid)
+	assert.NotEqual(t, nil, err, "获取客服信息应该失败")
+	assert.Nil(t, staff, "获取客服信息应该失败，是nil")
+}
+
+func TestGetVisitor(t *testing.T) {
+	oid := 1
+	vid := "SFnvhYMhKzIb9sIaVuvCN9H"
+
+	staff, err := ss.GetVisitor(oid, vid)
+	assert.Equal(t, nil, err, "获取访客信息应该成功")
+	assert.NotNil(t, staff, "获取访客信息应该成功，不是nil")
+}
+
+func TestGetVisitorNotExists(t *testing.T) {
+	oid := 1
+	vid := "xxx"
+
+	staff, err := ss.GetVisitor(oid, vid)
+	assert.NotEqual(t, nil, err, "获取访客信息应该失败")
+	assert.Nil(t, staff, "获取访客信息应该失败，是nil")
+}
+
+// INSERT INTO `tracks` (`tid`, `vid`, `fp`, `oid`, `url`, `title`, `referer`, `os`, `browser`, `ip`, `addr`, `created_at`)
+// VALUES
+// 	('20161212140801SFnvhYMhKzIb9sIaVuvCN9HpE4Sb5AIkM7tLRrL', 'SFnvhYMhKzIb9sIaVuvCN9H', 'd9e18d4faaca9be1a797d2d9c4528bce', 1, 'http://www.horn.com:9092/demo.html', 'demo.html', '', 'MacOS', 'Chrome', '101.71.255.226', '浙江杭州', '2016-12-12 14:08:01'),
+// 	('20161212140810SFnvhYMhKzIb9sIaVuvCN9H477WvNRW0ASwGYJK', 'SFnvhYMhKzIb9sIaVuvCN9H', '99c5c7c54c42a562e880bb0f522d84d1', 1, 'http://www.horn.com:9092/demo.html', 'demo.html', '', 'MacOS', 'Chrome', '101.71.255.226', '浙江杭州', '2016-12-12 14:08:10'),
+// 	('20161212140812SFnvhYMhKzIb9sIaVuvCN9HmubgLIvavDX6e6PE', 'SFnvhYMhKzIb9sIaVuvCN9H', '99c5c7c54c42a562e880bb0f522d84d1', 1, 'http://www.horn.com:9092/demo.html?key=1481551691531', 'demo.html', 'http://www.horn.com:9092/demo.html', 'MacOS', 'Chrome', '101.71.255.226', '浙江杭州', '2016-12-12 14:08:12'),
+// 	('20161212140904SFnvhYMhKzIb9sIaVuvCN9HBoTJDV57wZO8NzqJ', 'SFnvhYMhKzIb9sIaVuvCN9H', '99c5c7c54c42a562e880bb0f522d84d1', 1, 'http://www.horn.com:9092/demo.html?key=1481551743671', 'demo.html', 'http://www.horn.com:9092/demo.html?key=1481551691531', 'MacOS', 'Chrome', '101.71.255.226', '浙江杭州', '2016-12-12 14:09:04'),
+// 	('20161212140907SFnvhYMhKzIb9sIaVuvCN9HnHkEyuuwuZGm29Lq', 'SFnvhYMhKzIb9sIaVuvCN9H', '99c5c7c54c42a562e880bb0f522d84d1', 1, 'http://www.horn.com:9092/demo.html?key=1481551746955', 'demo.html', 'http://www.horn.com:9092/demo.html?key=1481551743671', 'MacOS', 'Chrome', '101.71.255.226', '浙江杭州', '2016-12-12 14:09:07');
+
+func TestGetVisitorTracks(t *testing.T) {
+	oid := 1
+	vid := "SFnvhYMhKzIb9sIaVuvCN9H"
+
+	tracks, err := ss.GetVisitorLastTracks(oid, vid, 5)
+	assert.Equal(t, nil, err, "获取访客轨迹应该成功")
+	assert.NotNil(t, tracks, "获取访客轨迹应该成功，不是nil")
+	assert.Equal(t, 5, len(tracks), "访客轨迹应该有5条")
 }

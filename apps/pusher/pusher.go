@@ -215,9 +215,9 @@ func (c *PusherWSServer) Handle(conn *websocket.Conn) {
 	q := conn.Request().URL.Query()
 
 	uid := q.Get("uid")
-	tid := q.Get("track_id")
+	tid := q.Get("tid")
 	if uid == "" || tid == "" {
-		fmt.Fprintf(conn, `{"code":0,"msg":"uid or track_id empty"}`)
+		fmt.Fprintf(conn, `{"code":0,"msg":"uid or tid empty"}`)
 		conn.Close()
 		return
 	}
