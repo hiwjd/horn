@@ -15,20 +15,9 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-type Config struct {
-	Channel          string
-	Topics           []string
-	NsqdTCPAddrs     []string
-	LookupdHTTPAddrs []string
-	MaxInFlight      int
-	MysqlConfigs     map[string]*mysql.Config
-	SendCloudApiUser string
-	SendCloudApiKey  string
-}
-
 var (
 	configPath string
-	config     Config
+	config     persist.Config
 )
 
 func init() {

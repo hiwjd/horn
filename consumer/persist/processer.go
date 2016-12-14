@@ -148,8 +148,8 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	return nil
 }
 
-func viewPageProcesser(handler *Handler, body []byte) error {
-	log.Println(" -> viewPageProcesser")
+func trackProcesser(handler *Handler, body []byte) error {
+	log.Println(" -> trackProcesser")
 	var v state.Track
 	err := json.Unmarshal(body, &v)
 	if err != nil {

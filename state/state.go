@@ -52,7 +52,7 @@ type Track struct {
 	Os        string    `db:"os" json:"os"`
 	Browser   string    `db:"browser" json:"browser"`
 	Ip        string    `db:"ip" json:"ip"`
-	Addr      string    `db:"addr" josn:"addr"`
+	Addr      string    `db:"addr" json:"addr"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 

@@ -27,8 +27,8 @@ func NewHandler(mysqlManager *mysql.Manager, emailSender *sendcloud.EmailSender)
 	ps["#c"] = imageProcesser
 	ps["#d"] = requestChatProcesser
 	ps["#e"] = joinChatProcesser
-	ps["#f"] = viewPageProcesser
-	ps["#g"] = signupEmailProcesser
+	ps["#f"] = trackProcesser
+	ps["#g"] = sendEmailProcesser
 	return &Handler{
 		processsers:  ps,
 		mysqlManager: mysqlManager,

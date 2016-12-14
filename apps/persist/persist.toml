@@ -1,4 +1,4 @@
-Topics = ["message","view_page","signup_email"]
+Topics = ["message","track","send_email"]
 Channel = "persist"
 LookupdHTTPAddrs = []
 NsqdTCPAddrs = ["127.0.0.1:4150"]

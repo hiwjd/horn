@@ -25,7 +25,7 @@ func NewHandler(state state.State) *Handler {
 	ps["#c"] = imageProcesser
 	ps["#d"] = requestChatProcesser
 	ps["#e"] = joinChatProcesser
-	ps["#f"] = viewPageProcesser
+	ps["#f"] = trackProcesser
 	ps["#g"] = timeoutProcesser
 	return &Handler{
 		processsers: ps,

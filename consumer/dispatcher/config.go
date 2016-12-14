@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	Topic            string
+	Topics           []string
 	Channel          string
 	LookupdHTTPAddrs []string
 	NsqdTCPAddrs     []string

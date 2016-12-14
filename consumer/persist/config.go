@@ -6,9 +6,11 @@ import (
 
 type Config struct {
 	Channel          string
-	Topic            string
+	Topics           []string
 	NsqdTCPAddrs     []string
 	LookupdHTTPAddrs []string
 	MaxInFlight      int
 	MysqlConfigs     map[string]*mysql.Config
+	SendCloudApiUser string
+	SendCloudApiKey  string
 }

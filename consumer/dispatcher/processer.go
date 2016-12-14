@@ -279,8 +279,8 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 	return nil
 }
 
-func viewPageProcesser(handler *Handler, body []byte) error {
-	log.Println(" -> viewPageProcesser")
+func trackProcesser(handler *Handler, body []byte) error {
+	log.Println(" -> trackProcesser")
 	var v state.Track
 	err := json.Unmarshal(body, &v)
 	if err != nil {
@@ -289,11 +289,17 @@ func viewPageProcesser(handler *Handler, body []byte) error {
 	}
 
 	oid := v.Oid
-
 	addr2uids := getAddr2UidsInOrg(oid, handler.state)
+	m := struct {
+		Type  string       `json:"type"`
+		Track *state.Track `json:"track"`
+	}{
+		"track",
+		&v,
+	}
 
 	for addr, uids := range addr2uids {
-		m := &consumer.Message2Pusher{"view_page", uids, v}
+		m := &consumer.Message2Pusher{"track", uids, m}
 		bs, er := json.Marshal(m)
 		if er != nil {
 			log.Printf(" -> 推送前序列化消息失败: %s \r\n", er.Error())

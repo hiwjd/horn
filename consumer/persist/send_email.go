@@ -17,9 +17,9 @@ import (
 // 消费者多了部署有点不便啊
 // 发邮件任务就先放在persist了
 
-func signupEmailProcesser(handler *Handler, body []byte) error {
-	log.Println(" -> signupEmailProcesser")
-	var v consumer.MessageSignupEmail
+func sendEmailProcesser(handler *Handler, body []byte) error {
+	log.Println(" -> sendEmailProcesser")
+	var v consumer.MessageSendEmail
 	err := json.Unmarshal(body, &v)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())

@@ -43,7 +43,7 @@ func main() {
 		log.Fatal("--channel is required")
 	}
 
-	if config.Topic == "" {
+	if len(config.Topics) < 1 {
 		log.Fatal("--topic is required")
 	}
 
@@ -60,35 +60,55 @@ func main() {
 	cfg.UserAgent = "useragent"
 	cfg.MaxInFlight = config.MaxInFlight
 
-	consumer, err := nsq.NewConsumer(config.Topic, config.Channel, cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	//redisManager := redis.New(config.RedisConfigs)
 	//mysqlManager := mysql.New(config.MysqlConfigs)
 	//s := state.New(mysqlManager, redisManager)
 	s := remote.New("http://127.0.0.1:9094")
+	handler := dispatcher.NewHandler(s)
 
-	//consumer.AddHandler(&TailHandler{totalMessages: *totalMessages})
-	consumer.AddConcurrentHandlers(dispatcher.NewHandler(s), 4)
+	consumers := make(map[*nsq.Consumer]int, len(config.Topics))
+	consumerStoped := make(chan *nsq.Consumer)
 
-	err = consumer.ConnectToNSQDs(config.NsqdTCPAddrs)
-	if err != nil {
-		log.Fatal(err)
-	}
+	for _, topic := range config.Topics {
+		consumer, err := nsq.NewConsumer(topic, config.Channel, cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	err = consumer.ConnectToNSQLookupds(config.LookupdHTTPAddrs)
-	if err != nil {
-		log.Fatal(err)
+		consumer.AddConcurrentHandlers(handler, 4)
+
+		err = consumer.ConnectToNSQDs(config.NsqdTCPAddrs)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = consumer.ConnectToNSQLookupds(config.LookupdHTTPAddrs)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		consumers[consumer] = 1
+
+		go func(consumer *nsq.Consumer) {
+			select {
+			case <-consumer.StopChan:
+				consumerStoped <- consumer
+				return
+			}
+		}(consumer)
 	}
 
 	for {
 		select {
-		case <-consumer.StopChan:
-			return
+		case consumer := <-consumerStoped:
+			delete(consumers, consumer)
+			if len(consumers) == 0 {
+				return
+			}
 		case <-sigChan:
-			consumer.Stop()
+			for consumer, _ := range consumers {
+				consumer.Stop()
+			}
 		}
 	}
 }

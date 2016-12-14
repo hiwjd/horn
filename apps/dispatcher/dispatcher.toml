@@ -1,4 +1,4 @@
-Topic = "message"
+Topics = ["message", "track"]
 Channel = "dispatch"
 LookupdHTTPAddrs = []
 NsqdTCPAddrs = ["127.0.0.1:4150"]

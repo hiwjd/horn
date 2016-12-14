@@ -130,7 +130,7 @@ type Message2Pusher struct {
 // }
 
 // 发送注册邮件
-type MessageSignupEmail struct {
+type MessageSendEmail struct {
 	Email string          `db:"email" json:"email"`
 	Type  string          `db:"type" json:"type"`
 	Data  json.RawMessage `db:"data" json:"data"`
