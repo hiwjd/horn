@@ -87,16 +87,16 @@ func genFindPassToken(mysqlManager *mysql.Manager, email string) (string, error)
 	expires_at := time.Now().Unix()
 
 	sql := `
-        INSERT INTO find_pass_email
-            (email,token,count,state,expires_at)
+        INSERT INTO email_tokens
+            (email,intention,token,count,state,expires_at)
         VALUES
-            (?,?,1,?,?) 
+            (?,'resetpass',?,1,?,?) 
         ON DUPLICATE KEY UPDATE 
             token=?, count=count+1, state=?, expires_at=?
     `
 	_, err = db.Exec(sql, email, token, "valid", expires_at, token, "valid", expires_at)
 	if err != nil {
-		log.Printf(" -> 新增／更新find_pass_email出错: %s \r\n", err.Error())
+		log.Printf(" -> 新增／更新email_tokens出错: %s \r\n", err.Error())
 		return "", err
 	}
 
@@ -114,16 +114,16 @@ func genSignupToken(mysqlManager *mysql.Manager, email string) (string, error) {
 	expires_at := time.Now().Unix()
 
 	sql := `
-        INSERT INTO signup_email
-            (email,token,count,state,expires_at)
+        INSERT INTO email_tokens
+            (email,intention,token,count,state,expires_at)
         VALUES
-            (?,?,1,?,?) 
+            (?,'signup',?,1,?,?) 
         ON DUPLICATE KEY UPDATE 
             token=?, count=count+1, state=?, expires_at=?
     `
 	_, err = db.Exec(sql, email, token, "valid", expires_at, token, "valid", expires_at)
 	if err != nil {
-		log.Printf(" -> 新增／更新signup_email出错: %s \r\n", err.Error())
+		log.Printf(" -> 新增／更新email_tokens出错: %s \r\n", err.Error())
 		return "", err
 	}
 
