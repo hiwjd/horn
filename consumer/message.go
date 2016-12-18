@@ -3,6 +3,8 @@ package consumer
 import (
 	"encoding/json"
 
+	"time"
+
 	"github.com/hiwjd/horn/state"
 )
 
@@ -43,11 +45,12 @@ type Chat struct {
 
 // 消息基本信息 会匿名组合到具体的消息里
 type Message struct {
-	Type string         `db:"type" json:"type"` // 消息的类型 text, file, image, event
-	T    map[string]int `db:"t" json:"t"`       // 0:客户端发出时间戳 1:入队列时间戳 2:分发时间戳
-	Mid  string         `db:"mid" json:"mid"`   // 消息ID
-	From *From          `db:"from" json:"from"` // 消息发送方信息
-	Oid  int            `db:"oid" json:"oid"`   // 公司ID
+	Type      string         `db:"type" json:"type"`             // 消息的类型 text, file, image, event
+	T         map[string]int `db:"t" json:"t"`                   // 0:客户端发出时间戳 1:入队列时间戳 2:分发时间戳
+	Mid       string         `db:"mid" json:"mid"`               // 消息ID
+	From      *From          `db:"from" json:"from"`             // 消息发送方信息
+	Oid       int            `db:"oid" json:"oid"`               // 公司ID
+	CreatedAt time.Time      `db:"created_at" json:"created_at"` // 创建时间戳
 }
 
 // 普通消息

@@ -22,7 +22,7 @@ type Staff struct {
 	Gender    string    `json:"gender" db:"gender"`
 	Mobile    string    `json:"mobile" db:"mobile"`
 	Email     string    `json:"email" db:"email"`
-	Pass      string    `json:"_" db:"pass"`
+	Pass      string    `json:",omitempty" db:"pass"`
 	Tel       string    `json:"tel" db:"tel"`
 	QQ        string    `json:"qq" db:"qq"`
 	Status    string    `json:"status" db:"status"`

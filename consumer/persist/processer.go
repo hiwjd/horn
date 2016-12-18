@@ -13,9 +13,9 @@ type Processser func(handler *Handler, body []byte) error
 
 var sql = `
 		INSERT INTO messages
-			(mid,oid,type,cid,from_uid,from_name,from_role,text,src,width,height,size,name,event)
+			(mid,oid,type,cid,from_uid,from_name,from_role,text,src,width,height,size,name,event,created_at)
 		VALUES
-			(?,  ?,  ?,   ?,      ?,       ?,        ?,        ?,   ?,  ?,    ?,     ?,   ?,   ?)
+			(?,  ?,  ?,   ?,      ?,       ?,        ?,        ?,   ?,  ?,    ?,     ?,   ?,   ?,         ?)
 	`
 
 func textProcesser(handler *Handler, body []byte) error {
@@ -33,7 +33,7 @@ func textProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Cid, v.From.Uid, v.From.Name, v.From.Role, v.Text, "", 0, 0, 0, "", "")
+	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Cid, v.From.Uid, v.From.Name, v.From.Role, v.Text, "", 0, 0, 0, "", "", v.CreatedAt)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -57,7 +57,7 @@ func imageProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Cid, v.From.Uid, v.From.Name, v.From.Role, "", v.Image.Src, v.Image.Width, v.Image.Height, v.Image.Size, "", "")
+	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Cid, v.From.Uid, v.From.Name, v.From.Role, "", v.Image.Src, v.Image.Width, v.Image.Height, v.Image.Size, "", "", v.CreatedAt)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -81,7 +81,7 @@ func fileProcesser(handler *Handler, body []byte) error {
 		return err
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Cid, v.From.Uid, v.From.Name, v.From.Role, "", v.File.Src, 0, 0, v.File.Size, v.File.Name, "")
+	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Cid, v.From.Uid, v.From.Name, v.From.Role, "", v.File.Src, 0, 0, v.File.Size, v.File.Name, "", v.CreatedAt)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -110,7 +110,7 @@ func requestChatProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Event.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Event.Chat.Cid, v.From.Uid, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs), v.CreatedAt)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -139,7 +139,7 @@ func joinChatProcesser(handler *Handler, body []byte) error {
 		log.Printf(" -> 把Event转成json失败: %s \r\n", err.Error())
 	}
 
-	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Event.Cid, v.From.Uid, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs))
+	_, err = db.Exec(sql, v.Mid, v.Oid, v.Type, v.Event.Cid, v.From.Uid, v.From.Name, v.From.Role, "", "", 0, 0, 0, "", string(bs), v.CreatedAt)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
@@ -165,11 +165,11 @@ func trackProcesser(handler *Handler, body []byte) error {
 
 	sql := `
 		INSERT INTO tracks
-			(tid, vid, fp, oid, url, title, referer, os, browser, ip, addr)
+			(tid, vid, fp, oid, url, title, referer, os, browser, ip, addr, created_at)
 		VALUES
-			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?,   ?)
+			(?,        ?,   ?,  ?,     ?,   ?,     ?,       ?,  ?,       ?,   ?,?)
 	`
-	r, err := db.Exec(sql, v.Tid, v.Vid, v.Fp, v.Oid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr)
+	r, err := db.Exec(sql, v.Tid, v.Vid, v.Fp, v.Oid, v.Url, v.Title, v.Referer, v.Os, v.Browser, v.Ip, v.Addr, v.CreatedAt)
 	if err != nil {
 		log.Printf(" -> 执行失败: %s \r\n", err.Error())
 		return err
