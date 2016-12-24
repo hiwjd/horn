@@ -22,11 +22,14 @@ type Staff struct {
 	Gender    string    `json:"gender" db:"gender"`
 	Mobile    string    `json:"mobile" db:"mobile"`
 	Email     string    `json:"email" db:"email"`
-	Pass      string    `json:",omitempty" db:"pass"`
+	Pass      string    `json:"-" db:"pass"`
 	Tel       string    `json:"tel" db:"tel"`
 	QQ        string    `json:"qq" db:"qq"`
 	Status    string    `json:"status" db:"status"`
 	State     string    `json:"state" db:"state"`
+	Gid       string    `json:"gid" db:"gid"`
+	CCN       int       `json:"ccn" db:"ccn"`
+	CCNCUR    int       `json:"ccn_cur" db:"ccn_cur"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
@@ -37,6 +40,14 @@ type Visitor struct {
 	State     string    `json:"state" db:"state"`
 	Fp        string    `json:"fp" db:"fp"`
 	Tid       string    `json:"tid" db:"tid"`
+	Name      string    `json:"name" db:"name"`
+	Gender    string    `json:"gender" db:"gender"`
+	Age       string    `json:"age" db:"age"`
+	Mobile    string    `json:"mobile" db:"mobile"`
+	Email     string    `json:"email" db:"email"`
+	QQ        string    `json:"qq" db:"qq"`
+	Addr      string    `json:"addr" db:"addr"`
+	Note      string    `json:"note" db:"note"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }

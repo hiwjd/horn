@@ -1,8 +1,11 @@
 package state
 
 import (
+	"log"
+
 	"github.com/hiwjd/horn/mysql"
 	"github.com/hiwjd/horn/redis"
+	"github.com/jmoiron/sqlx"
 )
 
 type localState struct {
@@ -99,4 +102,21 @@ func (s *localState) GetStaff(oid int, sid string) (*Staff, error) {
 func (s *localState) GetVisitorLastTracks(oid int, vid string, limit int) ([]*Track, error) {
 	c := &ctx{oid, ""}
 	return s.vm.getVisitorLastTracks(c, vid, limit)
+}
+
+func manageStaffCCNCur(db *sqlx.DB, oid int, sid string) error {
+	log.Printf("维护客服的当前对话数 oid[%d] sid[%s] \r\n", oid, sid)
+	sql := `
+		UPDATE staff SET 
+			ccn_cur = IFNULL((SELECT count(1) FROM chat_user WHERE oid=? AND uid=? AND role='staff' AND state='join'),0) 
+		WHERE 
+			oid = ? AND sid = ?
+	`
+	_, err := db.Exec(sql, oid, sid, oid, sid)
+	if err != nil {
+		log.Printf(" 维护客服当前对话数失败 oid[%d] sid[%s] err[%s]\r\n", oid, sid, err.Error())
+		return err
+	}
+
+	return nil
 }

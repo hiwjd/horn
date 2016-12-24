@@ -44,12 +44,12 @@ func (s *chat) create(c *ctx, cid, creator, sid, vid, tid string) error {
 
 	sql = `
 	INSERT INTO 
-		chat_user(cid, uid, role)
+		chat_user(cid, oid, uid, role)
 	VALUES 
-		(?,?,?)
+		(?,?,?,?)
 	`
 	role := getRole(creator)
-	r, err = db.Exec(sql, cid, creator, role)
+	r, err = db.Exec(sql, cid, c.oid, creator, role)
 	if err != nil {
 		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, creator, role, err.Error())
 		return err
@@ -64,7 +64,7 @@ func (s *chat) create(c *ctx, cid, creator, sid, vid, tid string) error {
 		return ErrUpdateNoAffect
 	}
 
-	return nil
+	return manageStaffCCNCur(db, c.oid, sid)
 }
 
 func (s *chat) addUser(c *ctx, cid, uid string) error {
@@ -76,13 +76,13 @@ func (s *chat) addUser(c *ctx, cid, uid string) error {
 
 	sql := `
 	INSERT INTO 
-		chat_user(cid, uid, role)
+		chat_user(cid, oid, uid, role)
 	VALUES 
-		(?,?,?)
+		(?,?,?,?)
 	ON DUPLICATE KEY UPDATE state = 'join'
 	`
 	role := getRole(uid)
-	_, err = db.Exec(sql, cid, uid, role)
+	_, err = db.Exec(sql, cid, c.oid, uid, role)
 	if err != nil {
 		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, uid, role, err.Error())
 		return err
@@ -110,6 +110,10 @@ func (s *chat) addUser(c *ctx, cid, uid string) error {
 
 	log.Printf(" 执行结果: %s \r\n", reply)
 
+	if role == "staff" {
+		return manageStaffCCNCur(db, c.oid, uid)
+	}
+
 	return nil
 }
 
@@ -120,8 +124,8 @@ func (s *chat) removeUser(c *ctx, cid, uid string) error {
 		return nil
 	}
 
-	sql := "update chat_user set state = 'leave' where cid = ? and uid = ?"
-	r, err := db.Exec(sql, cid, uid)
+	sql := "update chat_user set state = 'leave' where oid = ? and cid = ? and uid = ?"
+	r, err := db.Exec(sql, c.oid, cid, uid)
 	if err != nil {
 		return err
 	}
@@ -135,6 +139,10 @@ func (s *chat) removeUser(c *ctx, cid, uid string) error {
 		return ErrUpdateNoAffect
 	}
 
+	if getRole(uid) == "staff" {
+		return manageStaffCCNCur(db, c.oid, uid)
+	}
+
 	return nil
 }
 
@@ -146,7 +154,7 @@ func (s *chat) getUidsInChat(c *ctx, cid string) ([]string, error) {
 	}
 
 	var rows []string
-	err = db.Select(&rows, "select uid from chat_user where cid = ? and state = 'join'", cid)
+	err = db.Select(&rows, "select uid from chat_user where oid = ? and cid = ? and state = 'join'", c.oid, cid)
 	if err != nil {
 		log.Printf(" mysql执行失败: %s \r\n", err.Error())
 		return nil, err
@@ -163,7 +171,7 @@ func (s *chat) getChatIdsByUid(c *ctx, uid string) ([]string, error) {
 	}
 
 	var rows []string
-	err = db.Select(&rows, "select cid from chat_user where uid = ? and state = 'join'", uid)
+	err = db.Select(&rows, "select cid from chat_user where oid = ? and uid = ? and state = 'join'", c.oid, uid)
 	if err != nil {
 		log.Printf(" mysql执行失败: %s \r\n", err.Error())
 		return nil, err
