@@ -7,6 +7,7 @@ import (
 	rds "github.com/garyburd/redigo/redis"
 	"github.com/hiwjd/horn/mysql"
 	"github.com/hiwjd/horn/redis"
+	"github.com/hiwjd/horn/utils"
 )
 
 type chat struct {
@@ -48,7 +49,7 @@ func (s *chat) create(c *ctx, cid, creator, sid, vid, tid string) error {
 	VALUES 
 		(?,?,?,?)
 	`
-	role := getRole(creator)
+	role := utils.GetRole(creator)
 	r, err = db.Exec(sql, cid, c.oid, creator, role)
 	if err != nil {
 		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, creator, role, err.Error())
@@ -81,7 +82,7 @@ func (s *chat) addUser(c *ctx, cid, uid string) error {
 		(?,?,?,?)
 	ON DUPLICATE KEY UPDATE state = 'join'
 	`
-	role := getRole(uid)
+	role := utils.GetRole(uid)
 	_, err = db.Exec(sql, cid, c.oid, uid, role)
 	if err != nil {
 		log.Printf(" 建立对话-用户关系失败[%s - %s - %s]: %s \r\n", cid, uid, role, err.Error())
@@ -139,7 +140,7 @@ func (s *chat) removeUser(c *ctx, cid, uid string) error {
 		return ErrUpdateNoAffect
 	}
 
-	if getRole(uid) == "staff" {
+	if utils.GetRole(uid) == "staff" {
 		return manageStaffCCNCur(db, c.oid, uid)
 	}
 

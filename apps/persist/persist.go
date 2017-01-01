@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"text/template"
 
 	"github.com/hiwjd/horn/consumer/persist"
 	"github.com/hiwjd/horn/mysql"
@@ -61,9 +63,17 @@ func main() {
 	cfg.UserAgent = "useragent"
 	cfg.MaxInFlight = config.MaxInFlight
 
+	signupTpl, err := template.New("signup").Parse(config.SignupTpl)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	resetpassTpl, err := template.New("resetpass").Parse(config.ResetpassTpl)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	mysqlManager := mysql.New(config.MysqlConfigs)
 	emailSender := sendcloud.NewEmailSender(config.SendCloudApiUser, config.SendCloudApiKey)
-	handler := persist.NewHandler(mysqlManager, emailSender)
+	handler := persist.NewHandler(mysqlManager, emailSender, signupTpl, resetpassTpl)
 	consumers := make(map[*nsq.Consumer]int, len(config.Topics))
 
 	//var consumerStoped chan *nsq.Consumer

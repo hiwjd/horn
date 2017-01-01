@@ -13,4 +13,6 @@ type Config struct {
 	MysqlConfigs     map[string]*mysql.Config
 	SendCloudApiUser string
 	SendCloudApiKey  string
+	SignupTpl        string
+	ResetpassTpl     string
 }

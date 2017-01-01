@@ -7,6 +7,7 @@ import (
 
 	"github.com/hiwjd/horn/consumer"
 	"github.com/hiwjd/horn/state"
+	"github.com/hiwjd/horn/utils"
 )
 
 type Processser func(handler *Handler, body []byte) error
@@ -318,23 +319,107 @@ func trackProcesser(handler *Handler, body []byte) error {
 
 func timeoutProcesser(handler *Handler, body []byte) error {
 	log.Println(" -> timeoutProcesser")
-	var v consumer.MessageTimeout
-	err := json.Unmarshal(body, &v)
+	var vs []consumer.MessageTimeout
+	err := json.Unmarshal(body, &vs)
 	if err != nil {
 		log.Printf(" -> 解析消息失败: %s \r\n", err.Error())
 		return err
 	}
 
-	oid := v.Oid
 	state := handler.state
 
-	chatIds, err := state.GetChatIdsByUid(oid, v.Uid)
-	if err != nil {
-		return err
-	}
+	for _, v := range vs {
+		// 访客最后消息超时，结束对话，通知对话中的所有人
+		// 访客心跳超时，暂时没处理
+		// 客服最后消息超时，通知客服“你很久没说话了”，通知访客“客服正忙，请稍候”
+		// 客服心跳超时，暂时没处理
+		role := utils.GetRole(v.Uid)
 
-	for _, chatId := range chatIds {
-		state.LeaveChat(oid, v.Mid, chatId, v.Uid)
+		msg := consumer.MessageText{
+			Message: consumer.Message{
+				Type: "text",
+				T:    map[string]int{"t0": 0},
+				Mid:  v.Mid,
+				From: &consumer.From{
+					Oid:  v.Oid,
+					Uid:  "0",
+					Name: "系统消息",
+					Role: role,
+				},
+				Oid:       v.Oid,
+				CreatedAt: time.Now(),
+			},
+			Cid:  "",
+			Text: "",
+		}
+
+		switch v.Type {
+		case "hb": // 心跳超时了
+			break
+		case "lmt": // 最后的消息超时了
+			if role == "visitor" {
+				chatIds, err := state.GetChatIdsByUid(v.Oid, v.Uid)
+				if err != nil {
+					return err
+				}
+
+				for _, chatId := range chatIds {
+					msg.Cid = chatId
+					msg.Text = "对话结束"
+					addr2uids := getAddr2Uids(v.Oid, chatId, handler.state)
+					for addr, uids := range addr2uids {
+						m := &consumer.Message2Pusher{"text", uids, msg}
+						bs, er := json.Marshal(m)
+						if er != nil {
+							log.Printf(" -> 推送前序列化消息失败: %s \r\n", er.Error())
+						} else {
+							er = push(addr, bs)
+							if er != nil {
+								log.Printf("  --> 推送消息失败 %s: %s \r\n", bs, er.Error())
+							} else {
+								log.Printf("  --> 推送消息成功 addr[%s] uids[%v] %s\r\n", bs, addr, uids)
+							}
+						}
+					}
+
+					uids, err := state.GetUidsInChat(v.Oid, chatId)
+					if err != nil {
+						log.Printf("清理对话，获取对话中的用户时: %s \r\n", err.Error())
+					} else {
+						for _, uid := range uids {
+							state.LeaveChat(v.Oid, v.Mid, chatId, uid)
+							log.Printf("state.LeaveChat oid[%s] mid[%s] cid[%s] uid[%s] \r\n", v.Oid, v.Mid, chatId, uid)
+						}
+					}
+				}
+			} else if role == "staff" {
+				chatIds, err := state.GetChatIdsByUid(v.Oid, v.Uid)
+				if err != nil {
+					return err
+				}
+
+				for _, chatId := range chatIds {
+					msg.Cid = chatId
+					msg.Text = "访客已经等了很久了"
+					addr2uids := getAddr2Uids(v.Oid, chatId, handler.state)
+					for addr, uids := range addr2uids {
+						m := &consumer.Message2Pusher{"text", uids, msg}
+						bs, er := json.Marshal(m)
+						if er != nil {
+							log.Printf(" -> 推送前序列化消息失败: %s \r\n", er.Error())
+						} else {
+							er = push(addr, bs)
+							if er != nil {
+								log.Printf("  --> 推送消息失败 %s: %s \r\n", bs, er.Error())
+							} else {
+								log.Printf("  --> 推送消息成功 addr[%s] uids[%v] %s\r\n", bs, addr, uids)
+							}
+						}
+					}
+				}
+			}
+			break
+		}
 	}
 
 	return nil

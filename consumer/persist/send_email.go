@@ -3,10 +3,11 @@ package persist
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 
 	"time"
+
+	"bytes"
 
 	"github.com/hiwjd/horn/consumer"
 	"github.com/hiwjd/horn/mysql"
@@ -34,15 +35,25 @@ func sendEmailProcesser(handler *Handler, body []byte) error {
 		if err != nil {
 			return err
 		}
-		link := fmt.Sprintf("http://app.horn.com:9092/api/signup_confirm?s=%s", token)
 
-		template := `<p>你好！欢迎来到HORN</p><p>点击以下链接来激活您的账号</p><p><a target="_blank" href="%s">%s</a></p><p>HONR团队</p>`
-		html := fmt.Sprintf(template, link, link)
+		var buf bytes.Buffer
+		tplData := struct {
+			Token string
+			Email string
+		}{
+			Token: token,
+			Email: v.Email,
+		}
+		err = handler.signupTpl.Execute(&buf, tplData)
+		if err != nil {
+			log.Printf("signup email: %s \r\n", err.Error())
+		}
+
 		data = &sendcloud.EmailData{
-			From:     "welcome@horn.com",
+			From:     "team@hiyueliao.com",
 			To:       v.Email,
-			Subject:  "欢迎来到HORN",
-			Html:     html,
+			Subject:  "感谢您注册悦聊",
+			Html:     buf.String(),
 			FromName: "",
 			ReplyTo:  "",
 		}
@@ -51,15 +62,25 @@ func sendEmailProcesser(handler *Handler, body []byte) error {
 		if err != nil {
 			return err
 		}
-		link := fmt.Sprintf("http://app.horn.com:9092/api/find_pass/reset?s=%s", token)
 
-		template := `<p>找回密码</p><p>我们收到了找回密码的请求，如果这不是您操作的，请忽略。</p><p>点击该链接重置密码<a target="_blank" href="%s">%s</a></p><p>HONR团队</p>`
-		html := fmt.Sprintf(template, link, link)
+		var buf bytes.Buffer
+		tplData := struct {
+			Token string
+			Email string
+		}{
+			Token: token,
+			Email: v.Email,
+		}
+		err = handler.signupTpl.Execute(&buf, tplData)
+		if err != nil {
+			log.Printf("find_pass email: %s \r\n", err.Error())
+		}
+
 		data = &sendcloud.EmailData{
-			From:     "support@horn.com",
+			From:     "team@hiyueliao.com",
 			To:       v.Email,
 			Subject:  "找回密码",
-			Html:     html,
+			Html:     buf.String(),
 			FromName: "",
 			ReplyTo:  "",
 		}

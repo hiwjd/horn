@@ -3,6 +3,7 @@ package persist
 import (
 	"errors"
 	"log"
+	"text/template"
 
 	"github.com/hiwjd/horn/mysql"
 
@@ -18,9 +19,11 @@ type Handler struct {
 	processsers  map[string]Processser
 	mysqlManager *mysql.Manager
 	emailSender  *sendcloud.EmailSender
+	signupTpl    *template.Template
+	resetpassTpl *template.Template
 }
 
-func NewHandler(mysqlManager *mysql.Manager, emailSender *sendcloud.EmailSender) *Handler {
+func NewHandler(mysqlManager *mysql.Manager, emailSender *sendcloud.EmailSender, signupTpl *template.Template, resetpassTpl *template.Template) *Handler {
 	ps := make(map[string]Processser, 4)
 	ps["#a"] = textProcesser
 	ps["#b"] = fileProcesser
@@ -29,10 +32,13 @@ func NewHandler(mysqlManager *mysql.Manager, emailSender *sendcloud.EmailSender)
 	ps["#e"] = joinChatProcesser
 	ps["#f"] = trackProcesser
 	ps["#g"] = sendEmailProcesser
+
 	return &Handler{
 		processsers:  ps,
 		mysqlManager: mysqlManager,
 		emailSender:  emailSender,
+		signupTpl:    signupTpl,
+		resetpassTpl: resetpassTpl,
 	}
 }
 

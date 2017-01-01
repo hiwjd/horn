@@ -1,4 +1,4 @@
-Topics = ["message", "track"]
+Topics = ["message", "track", "timeout"]
 Channel = "dispatch"
 LookupdHTTPAddrs = []
 NsqdTCPAddrs = ["127.0.0.1:4150"]
@@ -7,14 +7,14 @@ MaxInFlight = 200
 [MysqlConfigs]
     [MysqlConfigs.write]
     User = "horn"
-    Pass = "HornMima1@#"
+    Pass = ""
     Addr = "127.0.0.1:3306"
     Protocol = "tcp"
     Dbname = "horn"
 
     [MysqlConfigs.read]
     User = "horn"
-    Pass = "HornMima1@#"
+    Pass = ""
     Addr = "127.0.0.1:3306"
     Protocol = "tcp"
     Dbname = "horn"
