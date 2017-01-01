@@ -140,6 +140,12 @@ func (s *chat) removeUser(c *ctx, cid, uid string) error {
 		return ErrUpdateNoAffect
 	}
 
+	sql = "update chats set state=if((select count(1) from chat_user where oid=? and cid=? and state='active')=0,'over','active') where oid=? and cid=?"
+	_, err = db.Exec(sql, c.oid, cid, c.oid, cid)
+	if err != nil {
+		return err
+	}
+
 	if utils.GetRole(uid) == "staff" {
 		return manageStaffCCNCur(db, c.oid, uid)
 	}
