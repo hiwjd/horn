@@ -5,18 +5,8 @@ NsqdTCPAddrs = ["127.0.0.1:4150"]
 MaxInFlight = 200
 SendCloudApiUser = ""
 SendCloudApiKey = ""
-SignupTpl = """
-<p>你好！感谢您注册悦聊</p>
-<p>点击以下链接来激活您的账号</p>
-<p><a target="_blank" href="http://app.hiyueliao.com/api/signup_confirm?s={{.Token}}">http://app.hiyueliao.com/api/signup_confirm?s={{.Token}}</a></p>
-<p>悦聊团队</p>
-"""
-ResetpassTpl = """
-<p>找回密码</p>
-<p>我们收到了找回密码的请求，如果这不是您操作的，请忽略。</p>
-<p>点击该链接重置密码<a target="_blank" href="http://app.hiyueliao.com/api/find_pass/reset?s={{.Token}}">http://app.hiyueliao.com/api/find_pass/reset?s={{.Token}}</a></p>
-<p>悦聊团队</p>
-"""
+SignupTpl = "<p>你好！感谢您注册悦聊</p><p>点击以下链接来激活您的账号</p><p><a target=\"_blank\" href=\"http://app.hiyueliao.com/api/signup_confirm?s={{.Token}}\">http://app.hiyueliao.com/api/signup_confirm?s={{.Token}}</a></p><p>悦聊团队</p>"
+ResetpassTpl = "<p>找回密码</p><p>我们收到了找回密码的请求，如果这不是您操作的，请忽略。</p><p>点击该链接重置密码<a target=\"_blank\" href=\"http://app.hiyueliao.com/api/find_pass/reset?s={{.Token}}\">http://app.hiyueliao.com/api/find_pass/reset?s={{.Token}}</a></p><p>悦聊团队</p>"
 
 [MysqlConfigs]
     [MysqlConfigs.write]
