@@ -1,3 +1,4 @@
 /apps/persist/persist.toml
 /apps/idgenerator/idgenerator.toml
 /apps/dispatcher/dispatcher.toml
+/apps/state/state.toml
